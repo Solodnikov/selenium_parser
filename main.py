@@ -12,6 +12,9 @@ password = 'Karabas19!'
 options = webdriver.ChromeOptions()
 options.add_argument('log-level=3')
 options.add_argument(f'user-agent={useragent.chrome}')
+# disable webdriver mode
+options.add_argument('--disable-blink-features=AutomationControlled')
+
 
 # driver_path
 service = Service(
@@ -27,6 +30,15 @@ driver = webdriver.Chrome(service=service,
 
 # start
 try:
+    # проверка работы веб драйвера
+    driver.get('https://intoli.com/blog/' +
+               'not-possible-to-block-chrome-headless/' +
+               'chrome-headless-test.html')
+    time.sleep(10)
+
+    # disable webdriver mode
+
+
     # driver.get('https://www.whatismybrowser.com/detect/what-is-my-user-agent/',
     driver.get(url=url)
 
@@ -50,7 +62,31 @@ try:
     # enter
     enter_button = driver.find_element(By.XPATH, "/html/body/div[5]/div/div[3]/div[1]/div/div/div/div/div/div[1]/div[1]/div/form/div[6]/button[1]")
     enter_button.click()
+
+    time.sleep(1)
+
+    # мои резюме
+    my_resume_button = driver.find_element(By.XPATH,"//a[@data-qa='mainmenu_myResumes']")
+    my_resume_button.click()
+    time.sleep(1)
+
+    # вакансии на 1 странице
+    # vacancies = driver.find_element(By.XPATH,"//a[@data-qa='resume-recommendations__button_respond']")
+    vacancies = driver.find_element(By.XPATH,'/html/body/div[5]/div/div[3]/div[1]/div/div/div[1]/div[5]/div/div/div[6]/div/div[2]/a')
+    vacancies.click()
     time.sleep(10)
+
+    # парсинг вакансий на странице
+    vacancy_list = driver.find_elements(By.CLASS_NAME,'vacancy-serp-item__layout')
+    for vacancy in vacancy_list:
+        name = vacancy.find_element(By.XPATH, "//a[@data-qa='serp-item__title']").text # название
+        # link = driver.find_element(By.LINK_TEXT, name)
+
+        # vacancy.find_element(By.XPATH, "//a[@data-qa='serp-item__title']").text # зарплата может отсутствовать
+        # vacancy.find_element(By.XPATH,"//a[@href]")
+        # vacancy.find_element(By.XPATH,'//a[@href="'+url+'"]')
+
+
 
 except Exception as ex:
     print(ex)
