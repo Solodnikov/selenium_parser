@@ -1,7 +1,8 @@
 import time
 from selenium.webdriver.common.by import By
-
+from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
+from tqdm import tqdm
 
 
 def authorization_hh(driver: webdriver.Chrome, url, email, password):
@@ -57,7 +58,8 @@ def from_my_resumes_to_recomended_vacations(driver: webdriver.Chrome):
     """ Переход cо страницы резюме на список рекомендуемых вакансий.
     """
     print('Getting vacancies list...')
-    vacancies = driver.find_element(By.XPATH,'/html/body/div[5]/div/div[3]/div[1]/div/div/div[1]/div[5]/div/div/div[6]/div/div[2]/a') # noqa
+    # vacancies = driver.find_element(By.XPATH,'/html/body/div[5]/div/div[3]/div[1]/div/div/div[1]/div[5]/div/div/div[6]/div/div[2]/a') # noqa
+    vacancies = driver.find_element(By.XPATH, "/html/body/div[5]/div/div[3]/div[1]/div/div/div[1]/div[6]/div[1]/div/div[6]/div/div[2]/a")  # noqa
     vacancies.click()
     time.sleep(1)
 
@@ -73,7 +75,7 @@ def get_pages_urls(driver: webdriver.Chrome):
     url_form = driver.current_url
     # собираю список страниц
     pages_urls = []
-    for page_number in range(0, (int(last_page_number))):
+    for page_number in tqdm(range(0, (int(last_page_number)))):
         url = f"{url_form}&page={page_number}"
         pages_urls.append(url)
     return pages_urls
@@ -98,33 +100,68 @@ def collecting_simple_info(pages_urls, driver: webdriver.Chrome):
     return vacancy_data
 
 
-def get_vacancy_info(vacancy_data, driver: webdriver.Chrome):
+def get_vacancy_info(vacancy_data: list, driver: webdriver.Chrome):
     """ Выполняет сбор детальных сведений по вакансии.
     """
     print('Vacancy detail collecting...')
     vacancy_detail_data = []
-    for vacancy in vacancy_data:
+    # skill_list = []
+    for vacancy in tqdm(vacancy_data):
         vac_index = vacancy[0]
         vac_name = vacancy[1]
+        vac_exp = vacancy[2]
         vac_url = vacancy[-1]
         driver.get(url=vac_url)
-        # 
-        salary = driver.find_element(By.CLASS_NAME, "vacancy-title").find_elements(By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-net']") # noqa
-        if salary:
-            vac_salary = salary[0].text
+
+        # получаю зп без налога
+        try:
+            vac_salary_net = driver.find_element(
+                By.CLASS_NAME, "vacancy-title").find_element(
+                    By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-net']") # noqa
+            vac_salary_net = vac_salary_net.text
+        except NoSuchElementException:
+            vac_salary_net = None
+        # если без налога не указана зп узнаю про зп с налогом
+        if not vac_salary_net:
+            try:
+                vac_salary_gross = driver.find_element(
+                    By.CLASS_NAME, "vacancy-title").find_element(
+                        By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-gross']") # noqa
+                vac_salary_gross = vac_salary_gross.text
+            except NoSuchElementException:
+                vac_salary_gross = None
         else:
-            vac_salary = None
-        vacancy_detail_data.append([vac_index, vac_name, vac_salary, vac_url])
+            vac_salary_gross = None
+
+        # получение сведений о навыках
+        try:
+            vac_skills = driver.find_element(
+                By.CLASS_NAME, "bloko-tag-list").find_elements(
+                    By.XPATH, "//span[@data-qa='bloko-tag__text']")
+            # for skill in vac_skills:
+            #     skill_list.append(skill.text)
+            skill_list = [skill.text for skill in vac_skills]
+        except NoSuchElementException:
+            # vac_skills = None
+            skill_list = None
+        vacancy_detail_data.append([vac_index, vac_name, vac_exp,
+                                    vac_salary_net, vac_salary_gross,
+                                    skill_list, vac_url])
     return vacancy_detail_data
 
 
-
-    #     vacancy_list = driver.find_elements(By.CLASS_NAME, 'vacancy-serp-item__layout') # noqa
-    #     for index, vacancy in enumerate(vacancy_list):
-    #         name = vacancy.find_element(By.TAG_NAME, "a").text # noqa
-    #         vacancy_url = vacancy.find_element(By.TAG_NAME, "a").get_attribute("href") # noqa
-    #         vacancy_exp = vacancy.find_element(By.XPATH, "//div[@data-qa='vacancy-serp__vacancy-work-experience']").text # noqa
-    #         vacancy_data.append([name, vacancy_exp, vacancy_url])
-    #         print(f'Vacancy page {index} - collected.')
-    # print('Collecting pages data done.')
-    # return vacancy_data
+def collecting_test_info(pages_urls, driver: webdriver.Chrome):
+    """ Формирует список по вакансиям (список).
+    """
+    print('Vacancy test data preparе...')
+    vacancy_data = []
+    page_url_1 = pages_urls[0]
+    driver.get(url=page_url_1)
+    vacancy_list = driver.find_elements(By.CLASS_NAME, 'vacancy-serp-item__layout') # noqa
+    for vacancy_index, vacancy in tqdm(enumerate(vacancy_list)):
+        name = vacancy.find_element(By.TAG_NAME, "a").text # noqa
+        vacancy_url = vacancy.find_element(By.TAG_NAME, "a").get_attribute("href") # noqa
+        vacancy_exp = vacancy.find_element(By.XPATH, "//div[@data-qa='vacancy-serp__vacancy-work-experience']").text # noqa
+        vacancy_data.append([vacancy_index, name, vacancy_exp, vacancy_url]) # noqa
+    print('Collecting test page data done.')
+    return vacancy_data
