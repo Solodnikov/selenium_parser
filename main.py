@@ -1,7 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from fake_useragent import UserAgent
-from functions import (authorization_hh,
+from functions import (authorization_hh, # noqa
                        check_driver,
                        from_main_to_my_resumes,
                        from_my_resumes_to_recomended_vacations,
