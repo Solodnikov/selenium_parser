@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from tqdm import tqdm
+from db import session, create
 
 
 def authorization_hh(driver: webdriver.Chrome, url, email, password):
@@ -141,12 +142,14 @@ def get_vacancy_info(vacancy_data: list, driver: webdriver.Chrome):
             # for skill in vac_skills:
             #     skill_list.append(skill.text)
             skill_list = [skill.text for skill in vac_skills]
+            skills = ', '.join(skill_list)
         except NoSuchElementException:
             # vac_skills = None
-            skill_list = None
+            skills = None
         vacancy_detail_data.append([vac_index, vac_name, vac_exp,
                                     vac_salary_net, vac_salary_gross,
-                                    skill_list, vac_url])
+                                    skills, vac_url])
+        # пробую добавить в базу данных
     return vacancy_detail_data
 
 
@@ -158,7 +161,7 @@ def collecting_test_info(pages_urls, driver: webdriver.Chrome):
     page_url_1 = pages_urls[0]
     driver.get(url=page_url_1)
     vacancy_list = driver.find_elements(By.CLASS_NAME, 'vacancy-serp-item__layout') # noqa
-    for vacancy_index, vacancy in tqdm(enumerate(vacancy_list)):
+    for vacancy_index, vacancy in tqdm(enumerate(vacancy_list[:4])):
         name = vacancy.find_element(By.TAG_NAME, "a").text # noqa
         vacancy_url = vacancy.find_element(By.TAG_NAME, "a").get_attribute("href") # noqa
         vacancy_exp = vacancy.find_element(By.XPATH, "//div[@data-qa='vacancy-serp__vacancy-work-experience']").text # noqa

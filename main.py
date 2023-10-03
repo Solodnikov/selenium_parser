@@ -11,6 +11,8 @@ from functions import (authorization_hh, # noqa
                        collecting_simple_info,
                        get_vacancy_info,
                        collecting_test_info)
+from db import session, create
+
 
 load_dotenv()
 
@@ -28,14 +30,14 @@ options.add_argument('--disable-blink-features=AutomationControlled')
 # options.add_argument('--headless')
 
 # путь веб драйвера для пк
-# service = Service(
-#     executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
-#     )
+service = Service(
+    executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
+    )
 
 # путь веб драйвера для ноута
-service = Service(
-    executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
-    )
+# service = Service(
+#     executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
+#     )
 
 # url
 url = 'https://hh.ru/account/login'
@@ -55,9 +57,10 @@ try:
     pages_urls = get_pages_urls(driver)
     # print(pages_urls)
 
-    collection = collecting_simple_info(pages_urls, driver)
-    # collection = collecting_test_info(pages_urls, driver)
+    # collection = collecting_simple_info(pages_urls, driver)
+    collection = collecting_test_info(pages_urls, driver)
     result = get_vacancy_info(collection, driver)
+    create(result, session)
     print()
 
 except Exception as ex:
