@@ -9,6 +9,12 @@ engine = create_engine('sqlite:///sqlite.db', echo=True)
 session = Session(engine)
 
 
+class Requirement(Base):
+    __tablename__ = 'requirement'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(200))
+
+
 class Vacancy(Base):
     __tablename__ = 'vacancy'
     id = Column(Integer, primary_key=True)
@@ -35,3 +41,5 @@ def create(array: list, session):
 
 if __name__ == '__main__':
     Base.metadata.create_all(engine)
+
+

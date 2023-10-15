@@ -4,6 +4,8 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from tqdm import tqdm
 from db import session, create
+import re
+import datetime
 
 
 def authorization_hh(driver: webdriver.Chrome, url, email, password):
@@ -66,7 +68,8 @@ def from_my_resumes_to_recomended_vacations(driver: webdriver.Chrome):
 
 
 def get_pages_urls(driver: webdriver.Chrome):
-    """ Получает адреса страниц списка вакансий.
+    """ Находясь на 1 страницы списка вакансий,
+    получает адреса всех страниц списков вакансий с пагинатора.
     """
     print('Getting pages urls...')
     paginator_block = driver.find_element(By.XPATH, "//div[@data-qa='pager-block']") # noqa
@@ -76,9 +79,10 @@ def get_pages_urls(driver: webdriver.Chrome):
     url_form = driver.current_url
     # собираю список страниц
     pages_urls = []
-    for page_number in tqdm(range(0, (int(last_page_number)))):
+    for page_number in range(0, (int(last_page_number))):
         url = f"{url_form}&page={page_number}"
         pages_urls.append(url)
+    # возвращаю список страниц списков вакансий
     return pages_urls
 
 
@@ -146,9 +150,27 @@ def get_vacancy_info(vacancy_data: list, driver: webdriver.Chrome):
         except NoSuchElementException:
             # vac_skills = None
             skills = None
-        vacancy_detail_data.append([vac_index, vac_name, vac_exp,
-                                    vac_salary_net, vac_salary_gross,
-                                    skills, vac_url])
+        
+        # выявление требований из вакансии
+        try:
+            mess = driver.find_element(By.XPATH, "//div[@data-qa='vacancy-description']").text  # noqa
+            requirements = get_vacancy_requirements(mess)
+            # проверка есть такое требование в базе данных
+            for requirement in requirements:
+                if requirement
+            # если нет то включить в базу данных
+
+        except NoSuchElementException:
+            # vac_skills = None
+            mess = None
+
+        vacancy_detail_data.append([vac_index,
+                                    vac_name,
+                                    vac_exp,
+                                    vac_salary_net,
+                                    vac_salary_gross,
+                                    skills,
+                                    vac_url])
         # пробую добавить в базу данных
     return vacancy_detail_data
 
@@ -168,3 +190,52 @@ def collecting_test_info(pages_urls, driver: webdriver.Chrome):
         vacancy_data.append([vacancy_index, name, vacancy_exp, vacancy_url]) # noqa
     print('Collecting test page data done.')
     return vacancy_data
+
+
+def get_vacancy_base_info(pages_urls, driver: webdriver.Chrome):
+    """ Получаю url и id вакансий.
+    """
+    print('Getting_vacancy_base_info...')
+    vacancy_data = []
+    print(f'Total pages to collect - {len(pages_urls)}')
+    # Получить только текущую дату
+    current_date = datetime.date.today()
+    # перебираю страницы списков вакансий
+    for page_index, page_url in enumerate(pages_urls):
+        print(f'...start collecting from page {page_index}.')
+        driver.get(url=page_url)
+        vacancy_list = driver.find_elements(By.CLASS_NAME, 'vacancy-serp-item__layout') # noqa
+    # перебираю данные о вакансиях на странице списка вакансий
+        for vacancy in tqdm(vacancy_list):
+            name = vacancy.find_element(By.TAG_NAME, "a").text # noqa
+            vacancy_url = vacancy.find_element(By.TAG_NAME, "a").get_attribute("href") # noqa
+            vacancy_number = get_vacancy_number(vacancy_url)
+            vacancy_exp = vacancy.find_element(By.XPATH, "//div[@data-qa='vacancy-serp__vacancy-work-experience']").text # noqa
+            vacancy_data.append(
+                [vacancy_number,
+                 name,
+                 vacancy_exp,
+                 vacancy_url,
+                 current_date]
+            ) # noqa
+        print(f'...base info collected from page {page_index}')
+    print('Vacancies base info collected.')
+    return vacancy_data
+
+
+def get_vacancy_number(page_url: str) -> str:
+    """ Получаю номер вакансии из строки url адреса вакансии.
+    """
+    pattern = r"/vacancy/(\d+)"
+    match = re.search(pattern, page_url)
+    if match:
+        return match.group(1)  # Номер вакансии
+    return None
+
+
+def get_vacancy_requirements(mess: str) -> set:
+    """Из строки вычленяет все латинские слова,
+    возвращает список"""
+    pattern = r'[a-zA-Z-]{2,}+(?:[\s-]\d+(?:\.\d+)?)?(?:\sAPI)?(?:\.[a-zA-Z-]{1,10})?'
+    requirements = set(re.findall(pattern, mess))
+    return requirements

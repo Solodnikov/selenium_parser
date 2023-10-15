@@ -10,7 +10,8 @@ from functions import (authorization_hh, # noqa
                        get_pages_urls,
                        collecting_simple_info,
                        get_vacancy_info,
-                       collecting_test_info)
+                       collecting_test_info,
+                       get_vacancy_base_info)
 from db import session, create
 
 
@@ -56,9 +57,13 @@ try:
 
     pages_urls = get_pages_urls(driver)
     # print(pages_urls)
-
+    
+    # базовый сбор сведений о вакансиях
     # collection = collecting_simple_info(pages_urls, driver)
+    # тестовый вариант работы
     collection = collecting_test_info(pages_urls, driver)
+    # обновленный сбор сведений о вакансиях
+    # collection = get_vacancy_base_info(pages_urls, driver)
     result = get_vacancy_info(collection, driver)
     create(result, session)
     print()
