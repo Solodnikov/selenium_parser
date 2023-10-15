@@ -87,7 +87,8 @@ def get_pages_urls(driver: webdriver.Chrome):
 
 
 def collecting_simple_info(pages_urls, driver: webdriver.Chrome):
-    """ Формирует список по вакансиям (список).
+    """ Формирует список, для дальнейшего парсинга сведений по вакансиям.
+        Вариант 1 для сбора сведений для списка вакансий.
     """
     print('Vacancy data preparе...')
     vacancy_data = []
@@ -99,7 +100,11 @@ def collecting_simple_info(pages_urls, driver: webdriver.Chrome):
             name = vacancy.find_element(By.TAG_NAME, "a").text # noqa
             vacancy_url = vacancy.find_element(By.TAG_NAME, "a").get_attribute("href") # noqa
             vacancy_exp = vacancy.find_element(By.XPATH, "//div[@data-qa='vacancy-serp__vacancy-work-experience']").text # noqa
-            vacancy_data.append([vacancy_index, name, vacancy_exp, vacancy_url]) # noqa
+            vacancy_data.append([
+                vacancy_index,
+                name,
+                vacancy_exp,
+                vacancy_url]) # noqa
         print(f'Vacancy page {page_index} - collected.')
     print('Collecting pages data done.')
     return vacancy_data
@@ -156,8 +161,8 @@ def get_vacancy_info(vacancy_data: list, driver: webdriver.Chrome):
             mess = driver.find_element(By.XPATH, "//div[@data-qa='vacancy-description']").text  # noqa
             requirements = get_vacancy_requirements(mess)
             # проверка есть такое требование в базе данных
-            for requirement in requirements:
-                if requirement
+            # for requirement in requirements:
+            #     if requirement
             # если нет то включить в базу данных
 
         except NoSuchElementException:
@@ -199,37 +204,45 @@ def get_vacancy_base_info(pages_urls, driver: webdriver.Chrome):
     vacancy_data = []
     print(f'Total pages to collect - {len(pages_urls)}')
     # Получить только текущую дату
-    current_date = datetime.date.today()
+    vac_date_parse = datetime.date.today()
+    # Форматируем дату в строку
+    vac_date_parse_str = vac_date_parse.strftime('%Y-%m-%d')
     # перебираю страницы списков вакансий
+    pages_urls = pages_urls[:2]  # ОГРАНИЧЕНИЕ ДЛЯ ТЕСТА
     for page_index, page_url in enumerate(pages_urls):
         print(f'...start collecting from page {page_index}.')
         driver.get(url=page_url)
         vacancy_list = driver.find_elements(By.CLASS_NAME, 'vacancy-serp-item__layout') # noqa
     # перебираю данные о вакансиях на странице списка вакансий
         for vacancy in tqdm(vacancy_list):
-            name = vacancy.find_element(By.TAG_NAME, "a").text # noqa
-            vacancy_url = vacancy.find_element(By.TAG_NAME, "a").get_attribute("href") # noqa
-            vacancy_number = get_vacancy_number(vacancy_url)
-            vacancy_exp = vacancy.find_element(By.XPATH, "//div[@data-qa='vacancy-serp__vacancy-work-experience']").text # noqa
+            vac_name = vacancy.find_element(By.TAG_NAME, "a").text # noqa
+            vac_url = vacancy.find_element(By.TAG_NAME, "a").get_attribute("href") # noqa
+            vac_number = get_vacancy_number(vac_url)
+            vac_exp = vacancy.find_element(By.XPATH, "//div[@data-qa='vacancy-serp__vacancy-work-experience']").text # noqa
             vacancy_data.append(
-                [vacancy_number,
-                 name,
-                 vacancy_exp,
-                 vacancy_url,
-                 current_date]
-            ) # noqa
+                {
+                    'vac_name' : vac_name,
+                    'vac_url' : vac_url,
+                    'vac_number': vac_number,
+                    'vac_exp': vac_exp,
+                    'vac_date_parse': vac_date_parse_str
+                }
+            )
+    # requirement
+    # vac_salary_net
+    # vac_salary_gross
         print(f'...base info collected from page {page_index}')
     print('Vacancies base info collected.')
     return vacancy_data
 
 
-def get_vacancy_number(page_url: str) -> str:
+def get_vacancy_number(page_url: str) -> int:
     """ Получаю номер вакансии из строки url адреса вакансии.
     """
     pattern = r"/vacancy/(\d+)"
     match = re.search(pattern, page_url)
     if match:
-        return match.group(1)  # Номер вакансии
+        return int(match.group(1))  # Номер вакансии
     return None
 
 
@@ -239,3 +252,68 @@ def get_vacancy_requirements(mess: str) -> set:
     pattern = r'[a-zA-Z-]{2,}+(?:[\s-]\d+(?:\.\d+)?)?(?:\sAPI)?(?:\.[a-zA-Z-]{1,10})?'
     requirements = set(re.findall(pattern, mess))
     return requirements
+
+
+def get_vacancy_info_ver2(vacancy_data: list, driver: webdriver.Chrome):
+    """ Выполняет сбор детальных сведений по вакансии.
+    Обновленный сборщик сведений.
+    """
+    driver.get(url=vacancy_data['vac_url'])
+    # получаю зп без налога
+    try:
+        vac_salary_net = driver.find_element(
+            By.CLASS_NAME, "vacancy-title").find_element(
+                By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-net']") # noqa
+        vac_salary_net = vac_salary_net.text
+    except NoSuchElementException:
+        vac_salary_net = None
+
+    # если без налога не указана зп узнаю про зп с налогом
+    if not vac_salary_net:
+        try:
+            vac_salary_gross = driver.find_element(
+                By.CLASS_NAME, "vacancy-title").find_element(
+                    By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-gross']") # noqa
+            vac_salary_gross = vac_salary_gross.text
+        except NoSuchElementException:
+            vac_salary_gross = None
+    else:
+        vac_salary_gross = None
+
+    # получение сведений о навыках из раздела навыков
+    try:
+        vac_skills = driver.find_element(
+            By.CLASS_NAME, "bloko-tag-list").find_elements(
+                By.XPATH, "//span[@data-qa='bloko-tag__text']")
+    # TODO: необходимо получить множество
+        skill_set = set(skill.text for skill in vac_skills)
+        # skills = ', '.join(skill_list)
+    except NoSuchElementException:
+        skill_set = None
+
+    # выявление требований из вакансии
+    try:
+        mess = driver.find_element(By.XPATH, "//div[@data-qa='vacancy-description']").text  # noqa
+        requirements = get_vacancy_requirements(mess)
+    except NoSuchElementException:
+        requirements = None
+    if requirements and skill_set:
+        requirements_data = requirements | skill_set
+    elif requirements:
+        requirements_data = requirements
+    else:
+        requirements_data = skill_set
+
+    vacancy_detail_data = {
+        'vac_number': vacancy_data['vac_number'],
+        'vac_url': vacancy_data['vac_url'],
+        'vac_name': vacancy_data['vac_name'],
+        'vac_exp': vacancy_data['vac_exp'],
+        'vac_salary_net': vac_salary_net,
+        'vac_salary_gross': vac_salary_gross,
+        'vac_date_parse': vacancy_data['vac_date_parse'],
+        'requirements': requirements_data
+    }
+    return vacancy_detail_data
+    # TODO: внести объекты множества в БД требований
+    # TODO: подготовить данные для согдания объекта Вакансии со связью с требованиями

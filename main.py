@@ -11,8 +11,10 @@ from functions import (authorization_hh, # noqa
                        collecting_simple_info,
                        get_vacancy_info,
                        collecting_test_info,
-                       get_vacancy_base_info)
-from db import session, create
+                       get_vacancy_base_info,
+                       get_vacancy_info_ver2)
+from db import session, create, create_obj_in_db
+from tqdm import tqdm
 
 
 load_dotenv()
@@ -61,11 +63,19 @@ try:
     # базовый сбор сведений о вакансиях
     # collection = collecting_simple_info(pages_urls, driver)
     # тестовый вариант работы
-    collection = collecting_test_info(pages_urls, driver)
+    # collection = collecting_test_info(pages_urls, driver)
     # обновленный сбор сведений о вакансиях
-    # collection = get_vacancy_base_info(pages_urls, driver)
-    result = get_vacancy_info(collection, driver)
-    create(result, session)
+    collection = get_vacancy_base_info(pages_urls, driver)
+    
+    # вынесен цикл операций в майн
+    print('Vacancy detail collecting...')
+    for vacancy_data in tqdm(collection):
+        data = get_vacancy_info_ver2(vacancy_data, driver)
+        create_obj_in_db(data, session)
+    # TODO проверить и внести данные 
+    # TODO настроить внесение результата в БД
+    # result = get_vacancy_info(collection, driver)
+    # create(result, session)
     print()
 
 except Exception as ex:
