@@ -13,7 +13,8 @@ from functions import (authorization_hh, # noqa
                        collecting_test_info,
                        get_vacancy_base_info,
                        get_vacancy_info_ver2)
-from db import session, create, create_obj_in_db
+from db import (session, create,
+                create_objs_in_db)
 from tqdm import tqdm
 
 
@@ -33,14 +34,14 @@ options.add_argument('--disable-blink-features=AutomationControlled')
 # options.add_argument('--headless')
 
 # путь веб драйвера для пк
-service = Service(
-    executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
-    )
+# service = Service(
+#     executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
+#     )
 
 # путь веб драйвера для ноута
-# service = Service(
-#     executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
-#     )
+service = Service(
+    executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
+    )
 
 # url
 url = 'https://hh.ru/account/login'
@@ -71,12 +72,12 @@ try:
     print('Vacancy detail collecting...')
     for vacancy_data in tqdm(collection):
         data = get_vacancy_info_ver2(vacancy_data, driver)
-        create_obj_in_db(data, session)
+        # create_obj_in_db(data, session)
+        create_objs_in_db(data, session)
     # TODO проверить и внести данные 
     # TODO настроить внесение результата в БД
     # result = get_vacancy_info(collection, driver)
     # create(result, session)
-    print()
 
 except Exception as ex:
     print(ex)

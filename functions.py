@@ -208,7 +208,7 @@ def get_vacancy_base_info(pages_urls, driver: webdriver.Chrome):
     # Форматируем дату в строку
     vac_date_parse_str = vac_date_parse.strftime('%Y-%m-%d')
     # перебираю страницы списков вакансий
-    pages_urls = pages_urls[:2]  # ОГРАНИЧЕНИЕ ДЛЯ ТЕСТА
+    pages_urls = pages_urls  # ОГРАНИЧЕНИЕ ДЛЯ ТЕСТА
     for page_index, page_url in enumerate(pages_urls):
         print(f'...start collecting from page {page_index}.')
         driver.get(url=page_url)
@@ -221,8 +221,8 @@ def get_vacancy_base_info(pages_urls, driver: webdriver.Chrome):
             vac_exp = vacancy.find_element(By.XPATH, "//div[@data-qa='vacancy-serp__vacancy-work-experience']").text # noqa
             vacancy_data.append(
                 {
-                    'vac_name' : vac_name,
-                    'vac_url' : vac_url,
+                    'vac_name': vac_name,
+                    'vac_url': vac_url,
                     'vac_number': vac_number,
                     'vac_exp': vac_exp,
                     'vac_date_parse': vac_date_parse_str
@@ -297,8 +297,13 @@ def get_vacancy_info_ver2(vacancy_data: list, driver: webdriver.Chrome):
         requirements = get_vacancy_requirements(mess)
     except NoSuchElementException:
         requirements = None
+
     if requirements and skill_set:
-        requirements_data = requirements | skill_set
+        for requirement in requirements:
+            if requirement.lower() not in {skill.lower() for skill in skill_set}:
+                skill_set.add(requirement)
+        requirements_data = skill_set
+
     elif requirements:
         requirements_data = requirements
     else:
@@ -315,5 +320,11 @@ def get_vacancy_info_ver2(vacancy_data: list, driver: webdriver.Chrome):
         'requirements': requirements_data
     }
     return vacancy_detail_data
-    # TODO: внести объекты множества в БД требований
-    # TODO: подготовить данные для согдания объекта Вакансии со связью с требованиями
+    # TODO: зп пересчитывать сразу в одном формате - на руки
+    # TODO: предусмотреть пересчет зп для уже внесенных позиций по которым зп с налогом
+    # TODO: не проверять позиции, которые есть в БД
+    # TODO: не проверять позиции, которые есть в БД, за исключением случая если давность дня 3
+    # TODO: возможно учитывать требования к вакансии отдельно навыки и в тексте
+    # TODO: научиться делить данные в тексте на обязательные и желательные дополнительно
+    # TODO: если нет данных о зп ни с налогом ни без, вносить сведение об отсутствии данных
+
