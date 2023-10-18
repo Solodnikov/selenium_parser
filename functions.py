@@ -3,9 +3,10 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from tqdm import tqdm
-from db import session, create
+from db import session, create, Vacancy
 import re
 import datetime
+from sqlalchemy.orm import Session
 
 
 def authorization_hh(driver: webdriver.Chrome, url, email, password):
@@ -417,3 +418,8 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
         'requirements': requirements_data
     }
     return vacancy_data
+
+
+def vacancy_exist(session: Session, vacancy_url: str) -> bool:
+    """Проверяет есть ли в базе данных вакансия по url"""
+    return session.query(Vacancy).filter_by(vac_url=vacancy_url).first()

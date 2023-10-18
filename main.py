@@ -16,6 +16,7 @@ from functions import (authorization_hh, # noqa
                        get_vacancy_number_from_url,
                        get_vacancy_urls_on_page,
                        get_vacancy_full_info,
+                       vacancy_exist
                        )
 from db import (session, create,
                 create_obj_in_db)
@@ -38,14 +39,14 @@ options.add_argument('--disable-blink-features=AutomationControlled')
 # options.add_argument('--headless')
 
 # путь веб драйвера для пк
-# service = Service(
-#     executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
-#     )
+service = Service(
+    executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
+    )
 
 # путь веб драйвера для ноута
-service = Service(
-    executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
-    )
+# service = Service(
+#     executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
+#     )
 
 # url
 url = 'https://hh.ru/account/login'
@@ -67,12 +68,13 @@ try:
         print(f"Start collecting info from page {index}")
         urls_collection = get_vacancy_urls_on_page(page_url, driver)
         print(f"Creating vacancy objects from page {index}")
-        for vacancy_url in tqdm(urls_collection[2:]):  # искуственно пропустил что бы не повторяться
-            try:
-                data = get_vacancy_full_info(vacancy_url, driver)
-                create_obj_in_db(data, session)
-            except Exception:
-                continue
+        for vacancy_url in tqdm(urls_collection):
+            if not vacancy_exist(session, vacancy_url):
+                try:
+                    data = get_vacancy_full_info(vacancy_url, driver)
+                    create_obj_in_db(data, session)
+                except Exception:
+                    continue
         print(f"Finished creating vacancy objects from page {index}")
     # print(pages_urls)
     
