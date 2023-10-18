@@ -236,7 +236,7 @@ def get_vacancy_base_info(pages_urls, driver: webdriver.Chrome):
     return vacancy_data
 
 
-def get_vacancy_number(page_url: str) -> int:
+def get_vacancy_number_from_url(page_url: str) -> int:
     """ Получаю номер вакансии из строки url адреса вакансии.
     """
     pattern = r"/vacancy/(\d+)"
@@ -248,9 +248,13 @@ def get_vacancy_number(page_url: str) -> int:
 
 def get_vacancy_requirements(mess: str) -> set:
     """Из строки вычленяет все латинские слова,
-    возвращает список"""
+    возвращает список.
+    Пассивная защита - если получено более 30 объектов,
+    значит найдены не навыки, а что-то другое и вернет None"""
     pattern = r'[a-zA-Z-]{2,}+(?:[\s-]\d+(?:\.\d+)?)?(?:\sAPI)?(?:\.[a-zA-Z-]{1,10})?'
     requirements = set(re.findall(pattern, mess))
+    if len(requirements) > 30:
+        requirements = None
     return requirements
 
 
@@ -328,3 +332,88 @@ def get_vacancy_info_ver2(vacancy_data: list, driver: webdriver.Chrome):
     # TODO: научиться делить данные в тексте на обязательные и желательные дополнительно
     # TODO: если нет данных о зп ни с налогом ни без, вносить сведение об отсутствии данных
 
+
+def get_vacancy_urls_on_page(page_url: str, driver: webdriver.Chrome) -> list:
+    """ Получаю список url вакансий на странице.
+    """
+    print('Getting page url...')
+    driver.get(url=page_url)
+    vacancy_data = []
+    vacancy_list = driver.find_elements(By.CLASS_NAME, 'vacancy-serp-item__layout') # noqa
+    for vacancy in tqdm(vacancy_list):
+        try:
+            vac_url = vacancy.find_element(By.TAG_NAME, "a").get_attribute("href") # noqa
+        except Exception:
+            continue
+        vacancy_data.append(vac_url)
+    return vacancy_data
+
+
+def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
+    """ По url получаю все сведения по вакансии.
+    """
+    print(f'получаю вседения по вакансии url {vacancy_url}')
+    driver.get(vacancy_url)
+    # БЛОК ПОЛУЧЕНИЯ ЗП
+    # получаю зп без налога
+    try:
+        vac_salary_net = driver.find_element(
+            By.CLASS_NAME, "vacancy-title").find_element(
+                By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-net']") # noqa
+        vac_salary_net = vac_salary_net.text
+    except NoSuchElementException:
+        vac_salary_net = None
+    # если без налога не указана зп узнаю про зп с налогом
+    if not vac_salary_net:
+        try:
+            vac_salary_gross = driver.find_element(
+                By.CLASS_NAME, "vacancy-title").find_element(
+                    By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-gross']") # noqa
+            vac_salary_gross = vac_salary_gross.text
+        except NoSuchElementException:
+            vac_salary_gross = None
+    else:
+        vac_salary_gross = None
+    
+    # БЛОК ПОЛУЧЕНИЯ НАВЫКОВ
+    # получение навыков из раздела навыков
+    try:
+        vac_skills = driver.find_element(
+            By.CLASS_NAME, "bloko-tag-list").find_elements(
+                By.XPATH, "//span[@data-qa='bloko-tag__text']")
+        skill_set = set(skill.text for skill in vac_skills)
+    except NoSuchElementException:
+        skill_set = None
+    # получение навыков из текста вакансии
+    try:
+        mess = driver.find_element(By.XPATH, "//div[@data-qa='vacancy-description']").text  # noqa
+        requirements = get_vacancy_requirements(mess)
+    except NoSuchElementException:
+        requirements = None
+    if requirements and skill_set:
+        requirements_data = requirements | skill_set
+    elif requirements:
+        requirements_data = requirements
+    else:
+        requirements_data = skill_set
+
+    # БЛОК ПОЛУЧЕНИЯ НОМЕРА ВАКАНСИИ
+    vac_number = get_vacancy_number_from_url(vacancy_url)
+    # БЛОК ПОЛУЧЕНИЯ НАЗВАНИЯ ВАКАНСИИ
+    vac_name = driver.find_element(By.XPATH, "//h1[@data-qa='vacancy-title']").text  # noqa
+    # БЛОК ПОЛУЧЕНИЯ ЭКСПЕРТИЗЫ
+    vac_exp = driver.find_element(By.XPATH, "//span[@data-qa='vacancy-experience']").text  # noqa
+    # БЛОК ПОЛУЧЕНИЯ ДАТЫ ПАРСИНГА
+    vac_date_parse = datetime.date.today().strftime('%Y-%m-%d')
+
+    vacancy_data = {
+        'vac_number': vac_number,
+        'vac_url': vacancy_url,
+        'vac_name': vac_name,
+        'vac_exp': vac_exp,
+        'vac_salary_net': vac_salary_net,
+        'vac_salary_gross': vac_salary_gross,
+        'vac_date_parse': vac_date_parse,
+        'requirements': requirements_data
+    }
+    return vacancy_data

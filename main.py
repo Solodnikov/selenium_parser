@@ -12,9 +12,13 @@ from functions import (authorization_hh, # noqa
                        get_vacancy_info,
                        collecting_test_info,
                        get_vacancy_base_info,
-                       get_vacancy_info_ver2)
+                       get_vacancy_info_ver2,
+                       get_vacancy_number_from_url,
+                       get_vacancy_urls_on_page,
+                       get_vacancy_full_info,
+                       )
 from db import (session, create,
-                create_objs_in_db)
+                create_obj_in_db)
 from tqdm import tqdm
 
 
@@ -59,6 +63,17 @@ try:
     from_my_resumes_to_recomended_vacations(driver)
 
     pages_urls = get_pages_urls(driver)
+    for index, page_url in enumerate(pages_urls):
+        print(f"Start collecting info from page {index}")
+        urls_collection = get_vacancy_urls_on_page(page_url, driver)
+        print(f"Creating vacancy objects from page {index}")
+        for vacancy_url in tqdm(urls_collection[2:]):  # искуственно пропустил что бы не повторяться
+            try:
+                data = get_vacancy_full_info(vacancy_url, driver)
+                create_obj_in_db(data, session)
+            except Exception:
+                continue
+        print(f"Finished creating vacancy objects from page {index}")
     # print(pages_urls)
     
     # базовый сбор сведений о вакансиях
@@ -66,14 +81,14 @@ try:
     # тестовый вариант работы
     # collection = collecting_test_info(pages_urls, driver)
     # обновленный сбор сведений о вакансиях
-    collection = get_vacancy_base_info(pages_urls, driver)
+    # collection = get_vacancy_base_info(pages_urls, driver)
     
     # вынесен цикл операций в майн
-    print('Vacancy detail collecting...')
-    for vacancy_data in tqdm(collection):
-        data = get_vacancy_info_ver2(vacancy_data, driver)
+    # print('Vacancy detail collecting...')
+    # for vacancy_data in tqdm(collection):
+    #     data = get_vacancy_info_ver2(vacancy_data, driver)
         # create_obj_in_db(data, session)
-        create_objs_in_db(data, session)
+        # create_objs_in_db(data, session)
     # TODO проверить и внести данные 
     # TODO настроить внесение результата в БД
     # result = get_vacancy_info(collection, driver)
@@ -84,3 +99,5 @@ except Exception as ex:
 finally:
     driver.close()
     driver.quit()
+# TODO предусмотреть варинт не открывать страницы, если имется такакя спарсенная вакансия.
+# TODO предусмотреть тайминг для парсинга вакансии после прохождения 200 ходов.
