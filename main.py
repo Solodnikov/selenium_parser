@@ -8,11 +8,7 @@ from functions import (authorization_hh, # noqa
                        from_main_to_my_resumes,
                        from_my_resumes_to_recomended_vacations,
                        get_pages_urls,
-                       collecting_simple_info,
                        get_vacancy_info,
-                       collecting_test_info,
-                       get_vacancy_base_info,
-                       get_vacancy_info_ver2,
                        get_vacancy_number_from_url,
                        get_vacancy_urls_on_page,
                        get_vacancy_full_info,
@@ -39,14 +35,14 @@ options.add_argument('--disable-blink-features=AutomationControlled')
 # options.add_argument('--headless')
 
 # путь веб драйвера для пк
-service = Service(
-    executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
-    )
+# service = Service(
+#     executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
+#     )
 
 # путь веб драйвера для ноута
-# service = Service(
-#     executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
-#     )
+service = Service(
+    executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
+    )
 
 # url
 url = 'https://hh.ru/account/login'
