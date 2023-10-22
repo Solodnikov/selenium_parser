@@ -7,6 +7,7 @@ from db import Vacancy
 import re
 import datetime
 from sqlalchemy.orm import Session
+from constants import BAD_WORDS
 
 
 def authorization_hh(driver: webdriver.Chrome, url, email, password):
@@ -92,7 +93,6 @@ def get_vacancy_info(vacancy_data: list, driver: webdriver.Chrome):
     """
     print('Vacancy detail collecting...')
     vacancy_detail_data = []
-    # skill_list = []
     for vacancy in tqdm(vacancy_data):
         vac_index = vacancy[0]
         vac_name = vacancy[1]
@@ -125,23 +125,15 @@ def get_vacancy_info(vacancy_data: list, driver: webdriver.Chrome):
             vac_skills = driver.find_element(
                 By.CLASS_NAME, "bloko-tag-list").find_elements(
                     By.XPATH, "//span[@data-qa='bloko-tag__text']")
-            # for skill in vac_skills:
-            #     skill_list.append(skill.text)
             skill_list = [skill.text for skill in vac_skills]
             skills = ', '.join(skill_list)
         except NoSuchElementException:
-            # vac_skills = None
             skills = None
         
         # выявление требований из вакансии
         try:
             mess = driver.find_element(By.XPATH, "//div[@data-qa='vacancy-description']").text  # noqa
             requirements = get_vacancy_requirements(mess)
-            # проверка есть такое требование в базе данных
-            # for requirement in requirements:
-            #     if requirement
-            # если нет то включить в базу данных
-
         except NoSuchElementException:
             # vac_skills = None
             mess = None
@@ -172,7 +164,6 @@ def get_vacancy_requirements(mess: str) -> set:
     возвращает список.
     Пассивная защита - если получено более 30 объектов,
     значит найдены не навыки, а что-то другое и вернет None"""
-    # pattern = r'[a-zA-Z-]{2,}+(?:[\s-]\d+(?:\.\d+)?)?(?:\sAPI)?(?:\.[a-zA-Z-]{1,10})?'
     pattern = r'[a-zA-Z-]{2,}+(?:\sAPI)?(?:\.[a-zA-Z-]{1,10})?'
     requirements = set(re.findall(pattern, mess))
     if len(requirements) > 50:
@@ -200,6 +191,11 @@ def get_vacancy_urls_on_page(page_url: str, driver: webdriver.Chrome) -> list:
     vacancy_list = driver.find_elements(By.CLASS_NAME, 'vacancy-serp-item__layout') # noqa
     for vacancy in tqdm(vacancy_list):
         try:
+            vac_name = (vacancy.find_element(By.XPATH, "//a[@data-qa='serp-item__title']").text).lower() # noqa
+            vac_name_words = vac_name.split()
+            has_common = any(element in vac_name_words for element in BAD_WORDS) # noqa
+            if has_common:
+                continue
             vac_url = vacancy.find_element(By.TAG_NAME, "a").get_attribute("href") # noqa
         except Exception:
             continue
@@ -212,6 +208,7 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
     """
     print(f'получаю вседения по вакансии url {vacancy_url}')
     driver.get(vacancy_url)
+    
     # БЛОК ПОЛУЧЕНИЯ ЗП
     # получаю зп без налога
     try:
@@ -219,8 +216,18 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
             By.CLASS_NAME, "vacancy-title").find_element(
                 By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-net']") # noqa
         vac_salary_net = vac_salary_net.text
+        max_match = re.search(r'до (\d+ ?)(\d+)?', vac_salary_net)
+        min_match = re.search(r'от (\d+)', vac_salary_net)
+        if min_match:
+            min_value = "".join(item.strip() for item in min_match.groups())
+            min_value = int(min_value)
+        if max_match:
+            max_value = "".join(item.strip() for item in max_match.groups())
+            max_value = int(max_value)
     except NoSuchElementException:
-        vac_salary_net = None
+        max_value, min_value = None, None
+
+
     # если без налога не указана зп узнаю про зп с налогом
     if not vac_salary_net:
         try:
@@ -228,10 +235,20 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
                 By.CLASS_NAME, "vacancy-title").find_element(
                     By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-gross']") # noqa
             vac_salary_gross = vac_salary_gross.text
+            max_match = re.search(r'до (\d+ ?)(\d+)?', vac_salary_gross)
+            min_match = re.search(r'от (\d+)', vac_salary_gross)
+            if min_match:
+                min_value = "".join(item.strip() for item in min_match.groups())
+                min_value = int(min_value)
+                min_value = round(min_value - min_value*0.13)
+            if max_match:
+                max_value = "".join(item.strip() for item in max_match.groups())
+                max_value = int(max_value)
+                max_value = round(max_value - max_value*0.13)
         except NoSuchElementException:
-            vac_salary_gross = None
+            max_value, min_value = None, None
     else:
-        vac_salary_gross = None
+        max_value, min_value = None, None
     
     # БЛОК ПОЛУЧЕНИЯ НАВЫКОВ
     # получение навыков из раздела навыков
@@ -269,8 +286,8 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
         'vac_url': vacancy_url,
         'vac_name': vac_name,
         'vac_exp': vac_exp,
-        'vac_salary_net': vac_salary_net,
-        'vac_salary_gross': vac_salary_gross,
+        'vac_salary_min': min_value,
+        'vac_salary_max': max_value,
         'vac_date_parse': vac_date_parse,
         'requirements': requirements_data
     }
@@ -280,3 +297,11 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
 def vacancy_exist(session: Session, vacancy_url: str) -> bool:
     """Проверяет есть ли в базе данных вакансия по url"""
     return session.query(Vacancy).filter_by(vac_url=vacancy_url).first()
+
+
+# def get_min_salary(text: str) -> int:
+#     min_match = re.search(r'от (\d+)', text)
+
+
+#     max_match = re.search(r'до (\d+ ?)(\d+)?', text)
+    
