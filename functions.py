@@ -211,13 +211,14 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
     
     # БЛОК ПОЛУЧЕНИЯ ЗП
     # получаю зп без налога
+    max_value, min_value = None, None
     try:
         vac_salary_net = driver.find_element(
             By.CLASS_NAME, "vacancy-title").find_element(
                 By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-net']") # noqa
         vac_salary_net = vac_salary_net.text
         max_match = re.search(r'до (\d+ ?)(\d+)?', vac_salary_net)
-        min_match = re.search(r'от (\d+)', vac_salary_net)
+        min_match = re.search(r'от (\d+ ?)(\d+)?', vac_salary_net)
         if min_match:
             min_value = "".join(item.strip() for item in min_match.groups())
             min_value = int(min_value)
@@ -229,14 +230,14 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
 
 
     # если без налога не указана зп узнаю про зп с налогом
-    if not vac_salary_net:
+    if not max_value and not min_value:
         try:
             vac_salary_gross = driver.find_element(
                 By.CLASS_NAME, "vacancy-title").find_element(
                     By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-gross']") # noqa
             vac_salary_gross = vac_salary_gross.text
             max_match = re.search(r'до (\d+ ?)(\d+)?', vac_salary_gross)
-            min_match = re.search(r'от (\d+)', vac_salary_gross)
+            min_match = re.search(r'от (\d+ ?)(\d+)?', vac_salary_gross)
             if min_match:
                 min_value = "".join(item.strip() for item in min_match.groups())
                 min_value = int(min_value)
@@ -247,9 +248,8 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
                 max_value = round(max_value - max_value*0.13)
         except NoSuchElementException:
             max_value, min_value = None, None
-    else:
-        max_value, min_value = None, None
     
+
     # БЛОК ПОЛУЧЕНИЯ НАВЫКОВ
     # получение навыков из раздела навыков
     try:

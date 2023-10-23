@@ -35,14 +35,14 @@ options.add_argument('--disable-blink-features=AutomationControlled')
 # options.add_argument('--headless')
 
 # путь веб драйвера для пк
-service = Service(
-    executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
-    )
+# service = Service(
+#     executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
+#     )
 
 # путь веб драйвера для ноута
-# service = Service(
-#     executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
-#     )
+service = Service(
+    executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
+    )
 
 # url
 url = 'https://hh.ru/account/login'
