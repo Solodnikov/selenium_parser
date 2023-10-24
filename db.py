@@ -1,17 +1,15 @@
 from __future__ import annotations
 from sqlalchemy import create_engine, Column, Integer, String, Table
 from sqlalchemy.orm import declarative_base, Session
-from tqdm import tqdm
 
 from typing import List
 
 from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import DeclarativeBase
+# from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
-from sqlalchemy import func
+# from sqlalchemy import func
 
 
 Base = declarative_base()
@@ -58,19 +56,6 @@ class Requirement(Base):
         return self.name
 
 
-def create(array: list, session):
-    for row in tqdm(array):
-        obj = Vacancy(
-            vac_name=row[1],
-            vac_exp=row[2],
-            vac_salary_net=row[3],
-            vac_salary_gross=row[4],
-            skills=row[5],
-            vac_url=row[6])
-        session.add(obj)
-        session.commit()
-
-
 def create_obj_in_db(data: dict, session: Session):
     # TODO настроить обработку, если объект давно парсился или не создан
     existing_vacancy = session.query(Vacancy).filter_by(id=data['vac_number']).first()  # noqa
@@ -95,13 +80,13 @@ def create_obj_in_db(data: dict, session: Session):
             vac_date_parse=data['vac_date_parse']
         )
         session.add(obj)
-        # Создаем или находим объекты Requirement и связываем их с объектом Vacancy
+        # Создаем или находим объекты Requirement и связываем их с объектом Vacancy # noqa
         requirements = data.get('requirements', set())
         for requirement_name in requirements:
             # узнаю есть ли такое тревание уже в базе
             existing_requirement = session.query(Requirement).filter_by(name=requirement_name).first()  # noqa
             if existing_requirement:
-                # Если объект Requirement с таким именем уже существует, связываем его с объектом Vacancy
+                # Если объект Requirement с таким именем уже существует, связываем его с объектом Vacancy # noqa
                 obj.requirement.append(existing_requirement)
             else:
                 # Если объект Requirement не существует, создаем новый

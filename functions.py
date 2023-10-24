@@ -88,67 +88,6 @@ def get_pages_urls(driver: webdriver.Chrome):
     return pages_urls
 
 
-def get_vacancy_info(vacancy_data: list, driver: webdriver.Chrome):
-    """ Выполняет сбор детальных сведений по вакансии.
-    """
-    print('Vacancy detail collecting...')
-    vacancy_detail_data = []
-    for vacancy in tqdm(vacancy_data):
-        vac_index = vacancy[0]
-        vac_name = vacancy[1]
-        vac_exp = vacancy[2]
-        vac_url = vacancy[-1]
-        driver.get(url=vac_url)
-
-        # получаю зп без налога
-        try:
-            vac_salary_net = driver.find_element(
-                By.CLASS_NAME, "vacancy-title").find_element(
-                    By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-net']") # noqa
-            vac_salary_net = vac_salary_net.text
-        except NoSuchElementException:
-            vac_salary_net = None
-        # если без налога не указана зп узнаю про зп с налогом
-        if not vac_salary_net:
-            try:
-                vac_salary_gross = driver.find_element(
-                    By.CLASS_NAME, "vacancy-title").find_element(
-                        By.XPATH, "//span[@data-qa='vacancy-salary-compensation-type-gross']") # noqa
-                vac_salary_gross = vac_salary_gross.text
-            except NoSuchElementException:
-                vac_salary_gross = None
-        else:
-            vac_salary_gross = None
-
-        # получение сведений о навыках
-        try:
-            vac_skills = driver.find_element(
-                By.CLASS_NAME, "bloko-tag-list").find_elements(
-                    By.XPATH, "//span[@data-qa='bloko-tag__text']")
-            skill_list = [skill.text for skill in vac_skills]
-            skills = ', '.join(skill_list)
-        except NoSuchElementException:
-            skills = None
-        
-        # выявление требований из вакансии
-        try:
-            mess = driver.find_element(By.XPATH, "//div[@data-qa='vacancy-description']").text  # noqa
-            requirements = get_vacancy_requirements(mess)
-        except NoSuchElementException:
-            # vac_skills = None
-            mess = None
-
-        vacancy_detail_data.append([vac_index,
-                                    vac_name,
-                                    vac_exp,
-                                    vac_salary_net,
-                                    vac_salary_gross,
-                                    skills,
-                                    vac_url])
-        # пробую добавить в базу данных
-    return vacancy_detail_data
-
-
 def get_vacancy_number_from_url(page_url: str) -> int:
     """ Получаю номер вакансии из строки url адреса вакансии.
     """

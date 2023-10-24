@@ -1,3 +1,5 @@
+# EXPERIMENT. NOT FOR USE
+
 # Import packages
 from dash import Dash, html, dash_table, dcc
 import pandas as pd
@@ -11,7 +13,8 @@ data = BASE_DIR / RESULS_DIR / 'junior_reqirements_top_22_10_2023.csv'
 
 # Incorporate data
 # df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv')
-df = pd.read_csv(data)
+# df = pd.read_csv(data)
+
 
 all_vacancy_junior = session.query(Vacancy).filter(
     or_(
@@ -25,19 +28,21 @@ count_all_vacancy_junior = session.query(Vacancy).filter(
         Vacancy.vac_exp == 'не требуется'
         )).count()
 
+df = pd.read_sql(all_vacancy_junior, engine)
+
 # Initialize the app
 app = Dash(__name__)
 
 # App layout
-app.layout = html.Div([
-    html.Div(children='My First App with Data'),
-    dash_table.DataTable(data=df.to_dict('records'), page_size=30),
-    dcc.Graph(figure=px.histogram(df,
-                                  x='Requirement',
-                                  y='Percentage',
-                                  histfunc='avg'
-                                  ))
-])
+# app.layout = html.Div([
+#     html.Div(children='My First App with Data'),
+#     dash_table.DataTable(data=df.to_dict('records'), page_size=30),
+#     dcc.Graph(figure=px.histogram(df,
+#                                   x='Requirement',
+#                                   y='Percentage',
+#                                   histfunc='avg'
+#                                   ))
+# ])
 
 # Run the app
 if __name__ == '__main__':

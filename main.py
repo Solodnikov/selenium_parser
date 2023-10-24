@@ -4,18 +4,14 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from fake_useragent import UserAgent
 from functions import (authorization_hh, # noqa
-                       check_driver,
                        from_main_to_my_resumes,
                        from_my_resumes_to_recomended_vacations,
                        get_pages_urls,
-                       get_vacancy_info,
-                       get_vacancy_number_from_url,
                        get_vacancy_urls_on_page,
                        get_vacancy_full_info,
                        vacancy_exist
                        )
-from db import (session, create,
-                create_obj_in_db)
+from db import session, create_obj_in_db
 from tqdm import tqdm
 
 
@@ -29,8 +25,10 @@ password = os.getenv('PASSWORD')
 options = webdriver.ChromeOptions()
 options.add_argument('log-level=3')
 options.add_argument(f'user-agent={useragent.chrome}')
+
 # disable webdriver mode
 options.add_argument('--disable-blink-features=AutomationControlled')
+
 # headless mode
 # options.add_argument('--headless')
 
@@ -72,31 +70,14 @@ try:
                 except Exception:
                     continue
         print(f"Finished creating vacancy objects from page {index}")
-    # print(pages_urls)
-    
-    # базовый сбор сведений о вакансиях
-    # collection = collecting_simple_info(pages_urls, driver)
-    # тестовый вариант работы
-    # collection = collecting_test_info(pages_urls, driver)
-    # обновленный сбор сведений о вакансиях
-    # collection = get_vacancy_base_info(pages_urls, driver)
-    
-    # вынесен цикл операций в майн
-    # print('Vacancy detail collecting...')
-    # for vacancy_data in tqdm(collection):
-    #     data = get_vacancy_info_ver2(vacancy_data, driver)
-        # create_obj_in_db(data, session)
-        # create_objs_in_db(data, session)
     # TODO проверить и внести данные 
     # TODO настроить внесение результата в БД
-    # result = get_vacancy_info(collection, driver)
-    # create(result, session)
 
 except Exception as ex:
     print(ex)
 finally:
     driver.close()
     driver.quit()
-# TODO предусмотреть варинт не открывать страницы, если имется такакя спарсенная вакансия.
+# TODO предусмотреть варинт не открывать страницы, если имется такакя спарсенная вакансия. # noqa
 # TODO предусмотреть тайминг для парсинга вакансии после прохождения 200 ходов.
 # TODO проработать старт для куки

@@ -4,10 +4,19 @@ from sqlalchemy import or_
 import csv
 from constants import DATE_TODAY, BASE_DIR, RESULS_DIR
 
+# Задаем имя файла CSV для сохранения требований
+report_file = BASE_DIR / RESULS_DIR / f'junior_reqirements_top_{DATE_TODAY}.csv'  # noqa
 
+# Задаем имя файла CSV для сохранения зарплат
+salary_file = BASE_DIR / RESULS_DIR / f'junior_salary_data_{DATE_TODAY}.csv'  # noqa
+
+# подсчитаваю общее количество вакансий
 all_vacancy_count = session.query(func.count(Vacancy.id)).scalar()
+
+# подсчитываю общее количество требований
 all_requirement_count = session.query(func.count(Requirement.id)).scalar()
 
+# подсчитаваю джуновские вакансии
 junior_vacancy_count = session.query(func.count(Vacancy.id)) \
     .filter(
         or_(
@@ -46,8 +55,51 @@ result_junior_sorted = sorted(result_junior, key=lambda x: x[1], reverse=True)
 
 # percent_data = [[requirement, f'{count/junior_vacancy_count*100:.0f}%'] for requirement, count in result_junior_sorted if count/junior_vacancy_count*100 >= 10]  # noqa
 percent_data = [[requirement, f'{count/junior_vacancy_count*100:.0f}'] for requirement, count in result_junior_sorted if count/junior_vacancy_count*100 >= 10]
-# Задаем имя файла CSV для сохранения
-report_file = BASE_DIR / RESULS_DIR / f'junior_reqirements_top_{DATE_TODAY}.csv'  # noqa
+
+
+# Запрос на получение данных для зарплаты
+junior_salary_query = session.query(Vacancy.vac_name, Vacancy.vac_salary_min, Vacancy.vac_salary_max) \
+    .filter(  # noqa
+        or_(
+            Vacancy.vac_exp == '1–3 года',
+            Vacancy.vac_exp == 'не требуется'
+        )
+    ).filter(
+        or_(
+            Vacancy.vac_salary_min.isnot(None),
+            Vacancy.vac_salary_max.isnot(None)
+        )
+    ).all()
+
+
+def normalize_salary(data):
+    """ обрабатываю мин и макс показатели,
+    получаю среднюю сумму для дальнейшей обработки.
+    """
+    salary = None
+    salary_data = []
+    for name, low, high in data:
+        if low and high:
+            salary = round((low + high)/2)
+        elif low:
+            salary = round(low + low * 0.10)
+        elif high:
+            salary = high
+        salary_data.append([name, salary])
+    return sorted(salary_data, key=lambda x: x[1])
+
+
+with open(salary_file, 'w', newline='') as file:
+    writer = csv.writer(file)
+    # Записываем заголовки, если необходимо
+    writer.writerow(['Name', 'Salary'])
+    # Записываем данные
+    writer.writerows(
+        normalize_salary(junior_salary_query)
+    )
+
+print(f'Результаты сохранены в файл {salary_file}')
+
 
 # Записываем результаты в файл CSV
 with open(report_file, 'w', newline='') as file:
