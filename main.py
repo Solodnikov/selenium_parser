@@ -35,14 +35,14 @@ options.add_argument('--disable-blink-features=AutomationControlled')
 # options.add_argument('--headless')
 
 # путь веб драйвера для пк
-# service = Service(
-#     executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
-#     )
+service = Service(
+    executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
+    )
 
 # путь веб драйвера для ноута
-service = Service(
-    executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
-    )
+# service = Service(
+#     executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
+#     )
 
 # url
 url = 'https://hh.ru/account/login'
@@ -99,3 +99,4 @@ finally:
     driver.quit()
 # TODO предусмотреть варинт не открывать страницы, если имется такакя спарсенная вакансия.
 # TODO предусмотреть тайминг для парсинга вакансии после прохождения 200 ходов.
+# TODO проработать старт для куки
