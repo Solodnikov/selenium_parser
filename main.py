@@ -9,10 +9,12 @@ from functions import (authorization_hh, # noqa
                        get_pages_urls,
                        get_vacancy_urls_on_page,
                        get_vacancy_full_info,
-                       vacancy_exist
+                       vacancy_exist,
+                       vacancy_old,
                        )
-from db import session, create_obj_in_db
+from db import session, create_obj_in_db, update_obj_in_db
 from tqdm import tqdm
+from constants import LOGIN_URL, WEB_DRIVER_PATH
 
 
 load_dotenv()
@@ -32,53 +34,51 @@ options.add_argument('--disable-blink-features=AutomationControlled')
 # headless mode
 # options.add_argument('--headless')
 
-# путь веб драйвера для пк
-# service = Service(
-#     executable_path=r'E:\DEV\PET_PROJECTS\selenium_parser\chromedriver\chromedriver.exe'  # noqa 
-#     )
-
-# путь веб драйвера для ноута
+# подключение веб драйвера
 service = Service(
-    executable_path=r'C:\dev\PET_PROJECT\selenium_parser\chromedriver\chromedriver.exe'  # noqa
-    )
-# TODO: завести путь к драйверу через PAthlib, что бы каждый раз не переключать
-
-# url
-url = 'https://hh.ru/account/login'
+    executable_path=WEB_DRIVER_PATH
+)
 
 # brouser
 driver = webdriver.Chrome(service=service,
                           options=options)
 
-
 # start
 try:
-    # check_driver(driver)
-    authorization_hh(driver, url, email, password)
+    authorization_hh(driver, LOGIN_URL, email, password)
     from_main_to_my_resumes(driver)
     from_my_resumes_to_recomended_vacations(driver)
 
     pages_urls = get_pages_urls(driver)
     for index, page_url in enumerate(pages_urls):
         print(f"Start collecting info from page {index}")
+        # получаю список урл вакансий на странице
         urls_collection = get_vacancy_urls_on_page(page_url, driver)
         print(f"Creating vacancy objects from page {index}")
         for vacancy_url in tqdm(urls_collection):
+            # если вакансия отсутствует в бд создаю запись
             if not vacancy_exist(session, vacancy_url):
                 try:
                     data = get_vacancy_full_info(vacancy_url, driver)
                     create_obj_in_db(data, session)
                 except Exception:
                     continue
+            # если вакансия устаревшая, обновляю сведения по ней
+            elif vacancy_old(session, vacancy_url):
+                try:
+                    data = get_vacancy_full_info(vacancy_url, driver)
+                    update_obj_in_db(data, session)
+                except Exception:
+                    continue
         print(f"Finished creating vacancy objects from page {index}")
-    # TODO проверить и внести данные 
-    # TODO настроить внесение результата в БД
 
 except Exception as ex:
     print(ex)
 finally:
     driver.close()
     driver.quit()
+
 # TODO предусмотреть варинт не открывать страницы, если имется такакя спарсенная вакансия. # noqa
 # TODO предусмотреть тайминг для парсинга вакансии после прохождения 200 ходов.
 # TODO проработать старт для куки
+# TODO компанию работодателя добавить бы в базу данных?

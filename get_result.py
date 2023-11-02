@@ -10,6 +10,8 @@ report_file = BASE_DIR / RESULS_DIR / f'junior_reqirements_top_{DATE_TODAY}.csv'
 # Задаем имя файла CSV для сохранения зарплат
 salary_file = BASE_DIR / RESULS_DIR / f'junior_salary_data_{DATE_TODAY}.csv'  # noqa
 
+salary_file_v2 = BASE_DIR / RESULS_DIR / f'junior_salary_data_v2_{DATE_TODAY}.csv'  # noqa
+
 # подсчитаваю общее количество вакансий
 all_vacancy_count = session.query(func.count(Vacancy.id)).scalar()
 
@@ -54,7 +56,7 @@ result_junior = junior_query.all()
 result_junior_sorted = sorted(result_junior, key=lambda x: x[1], reverse=True)
 
 # percent_data = [[requirement, f'{count/junior_vacancy_count*100:.0f}%'] for requirement, count in result_junior_sorted if count/junior_vacancy_count*100 >= 10]  # noqa
-percent_data = [[requirement, f'{count/junior_vacancy_count*100:.0f}'] for requirement, count in result_junior_sorted if count/junior_vacancy_count*100 >= 10]
+percent_data = [[requirement, f'{count/junior_vacancy_count*100:.0f}'] for requirement, count in result_junior_sorted if count/junior_vacancy_count*100 >= 10] # noqa
 
 
 # Запрос на получение данных для зарплаты
@@ -69,7 +71,8 @@ junior_salary_query = session.query(Vacancy.vac_name, Vacancy.vac_salary_min, Va
             Vacancy.vac_salary_min.isnot(None),
             Vacancy.vac_salary_max.isnot(None)
         )
-    ).all()
+    ).filter(Vacancy.vac_salary_min > 20000
+             ).all()
 
 
 def normalize_salary(data):
@@ -89,16 +92,16 @@ def normalize_salary(data):
     return sorted(salary_data, key=lambda x: x[1])
 
 
-with open(salary_file, 'w', newline='') as file:
-    writer = csv.writer(file)
-    # Записываем заголовки, если необходимо
-    writer.writerow(['Name', 'Salary'])
-    # Записываем данные
-    writer.writerows(
-        normalize_salary(junior_salary_query)
-    )
-
-print(f'Результаты сохранены в файл {salary_file}')
+def avarage_salary(normalize_data):
+    """ Считаем среднюю зп на джуна, срезав 20% крайних точек.
+    """
+    length = len(normalize_data)
+    possible_error = round(length*0.2)
+    cleared_selection = normalize_data[possible_error:-possible_error]
+    total = 0
+    for _, salary in cleared_selection:
+        total += salary
+    return total/len(cleared_selection)
 
 
 # Записываем результаты в файл CSV
@@ -110,3 +113,23 @@ with open(report_file, 'w', newline='') as file:
     writer.writerows(percent_data)
 
 print(f'Результаты сохранены в файл {report_file}')
+
+
+with open(salary_file_v2, 'w', newline='', encoding='utf-8') as file:
+    writer = csv.writer(file)
+    writer.writerow(['Average junior salary (1-3 year exp)',
+                     round(avarage_salary(
+                         normalize_salary(junior_salary_query)))
+                     ])
+    writer.writerow(['**************************************'])
+    # Записываем заголовки, если необходимо
+    writer.writerow(['Name', 'Salary'])
+    # Записываем данные
+    writer.writerows(
+        normalize_salary(junior_salary_query)
+    )
+
+print(f'Результаты сохранены в файл {salary_file_v2}')
+# Дополнить количеством выборки
+# Сколько всего, сколько использовано для выборки
+# кажется не отсекаются плохие слова в названиях вакансий

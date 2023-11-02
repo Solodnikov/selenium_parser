@@ -59,6 +59,7 @@ class Requirement(Base):
 def create_obj_in_db(data: dict, session: Session):
     # TODO настроить обработку, если объект давно парсился или не создан
     existing_vacancy = session.query(Vacancy).filter_by(id=data['vac_number']).first()  # noqa
+
     # if existing_vacancy:
     #     # Если объект Vacancy существует, просто обновляем его атрибуты
     #     existing_vacancy.vac_url = data['vac_url']
@@ -92,6 +93,38 @@ def create_obj_in_db(data: dict, session: Session):
                 # Если объект Requirement не существует, создаем новый
                 requirement = Requirement(name=requirement_name)
                 obj.requirement.append(requirement)
+        # Сохраняем изменения в базе данных
+        session.commit()
+
+
+def update_obj_in_db(data: dict, session: Session):
+    """На вход получает данные вакансии и обновляет все данные объекта."""
+    # TODO настроить обработку, если объект давно парсился или не создан
+    existing_vacancy = session.query(Vacancy).filter_by(id=data['vac_number']).first()  # noqa
+
+    if existing_vacancy:
+        # Если объект Vacancy существует, просто обновляем его атрибуты
+        # existing_vacancy.vac_url = data['vac_url']  # не нужен
+        existing_vacancy.vac_name = data['vac_name']
+        existing_vacancy.vac_exp = data['vac_exp']
+        existing_vacancy.vac_salary_min = data['vac_salary_min']
+        existing_vacancy.vac_salary_max = data['vac_salary_max']
+        existing_vacancy.vac_date_parse = data['vac_date_parse']
+        session.add(existing_vacancy)
+        # Создаем или находим объекты Requirement и связываем их с объектом Vacancy # noqa
+        requirements = data.get('requirements', set())
+        # Удаляем все текущие связи объекта Vacancy с Requirement
+        existing_vacancy.requirement.clear()
+        for requirement_name in requirements:
+            # узнаю есть ли такое тревание уже в базе
+            existing_requirement = session.query(Requirement).filter_by(name=requirement_name).first()  # noqa
+            if existing_requirement:
+                # Если объект Requirement с таким именем уже существует, связываем его с объектом Vacancy # noqa
+                existing_vacancy.requirement.append(existing_requirement)
+            else:
+                # Если объект Requirement не существует, создаем новый
+                requirement = Requirement(name=requirement_name)
+                existing_vacancy.requirement.append(requirement)
         # Сохраняем изменения в базе данных
         session.commit()
 

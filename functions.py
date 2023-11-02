@@ -8,6 +8,7 @@ import re
 import datetime
 from sqlalchemy.orm import Session
 from constants import BAD_WORDS
+# from datetime import datetime as dt
 
 
 def authorization_hh(driver: webdriver.Chrome, url, email, password):
@@ -111,14 +112,13 @@ def get_vacancy_requirements(mess: str) -> set:
     requirements = {re.sub(r'^-+|-+$', '', requirement.lower()) for requirement in requirements}  # noqa
     return requirements
 
-
     # TODO: зп пересчитывать сразу в одном формате - на руки
-    # TODO: предусмотреть пересчет зп для уже внесенных позиций по которым зп с налогом
+    # TODO: предусмотреть пересчет зп для уже внесенных позиций по которым зп с налогом  # noqa
     # TODO: не проверять позиции, которые есть в БД
-    # TODO: не проверять позиции, которые есть в БД, за исключением случая если давность дня 3
+    # TODO: не проверять позиции, которые есть в БД, за исключением случая если давность дня 3  # noqa
     # TODO: возможно учитывать требования к вакансии отдельно навыки и в тексте
-    # TODO: научиться делить данные в тексте на обязательные и желательные дополнительно
-    # TODO: если нет данных о зп ни с налогом ни без, вносить сведение об отсутствии данных
+    # TODO: научиться делить данные в тексте на обязательные и желательные дополнительно  # noqa
+    # TODO: если нет данных о зп ни с налогом ни без, вносить сведение об отсутствии данных  # noqa
 
 
 def get_vacancy_urls_on_page(page_url: str, driver: webdriver.Chrome) -> list:
@@ -147,7 +147,7 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
     """
     print(f'получаю вседения по вакансии url {vacancy_url}')
     driver.get(vacancy_url)
-    
+
     # БЛОК ПОЛУЧЕНИЯ ЗП
     # получаю зп без налога
     max_value, min_value = None, None
@@ -167,7 +167,6 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
     except NoSuchElementException:
         max_value, min_value = None, None
 
-
     # если без налога не указана зп узнаю про зп с налогом
     if not max_value and not min_value:
         try:
@@ -178,16 +177,15 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
             max_match = re.search(r'до (\d+ ?)(\d+)?', vac_salary_gross)
             min_match = re.search(r'от (\d+ ?)(\d+)?', vac_salary_gross)
             if min_match:
-                min_value = "".join(item.strip() for item in min_match.groups())
+                min_value = "".join(item.strip() for item in min_match.groups()) # noqa
                 min_value = int(min_value)
                 min_value = round(min_value - min_value*0.13)
             if max_match:
-                max_value = "".join(item.strip() for item in max_match.groups())
+                max_value = "".join(item.strip() for item in max_match.groups()) # noqa
                 max_value = int(max_value)
                 max_value = round(max_value - max_value*0.13)
         except NoSuchElementException:
             max_value, min_value = None, None
-    
 
     # БЛОК ПОЛУЧЕНИЯ НАВЫКОВ
     # получение навыков из раздела навыков
@@ -238,9 +236,14 @@ def vacancy_exist(session: Session, vacancy_url: str) -> bool:
     return session.query(Vacancy).filter_by(vac_url=vacancy_url).first()
 
 
-# def get_min_salary(text: str) -> int:
-#     min_match = re.search(r'от (\d+)', text)
-
-
-#     max_match = re.search(r'до (\d+ ?)(\d+)?', text)
-    
+def vacancy_old(session: Session, vacancy_url: str) -> bool:
+    """Проверяет есть ли в базе данных вакансия
+    с давностью 5 и более дней по url"""
+    params = '%Y-%m-%d'
+    current_date = datetime.date.today()
+    vacancy = session.query(Vacancy).filter_by(vac_url=vacancy_url).first()
+    vacancy_date = datetime.datetime.strptime(vacancy.vac_date_parse, params).date()  # noqa
+    delta = current_date - vacancy_date
+    if delta.days > 5:
+        return True
+    return False
