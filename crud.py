@@ -28,16 +28,6 @@ def create_obj_in_db(data: dict, session: Session):
     # TODO настроить обработку, если объект давно парсился или не создан
     existing_vacancy = session.query(Vacancy).filter_by(id=data['vac_number']).first()  # noqa
 
-    # if existing_vacancy:
-    #     # Если объект Vacancy существует, просто обновляем его атрибуты
-    #     existing_vacancy.vac_url = data['vac_url']
-    #     existing_vacancy.vac_name = data['vac_name']
-    #     existing_vacancy.vac_exp = data['vac_exp']
-    #     existing_vacancy.vac_salary_net = data['vac_salary_net']
-    #     existing_vacancy.vac_salary_gross = data['vac_salary_gross']
-    #     existing_vacancy.vac_date_parse = data['vac_date_parse']
-    # else:
-    #     # Если объект Vacancy не существует, создаем новый
     if not existing_vacancy:
         obj = Vacancy(
             id=data['vac_number'],
@@ -72,7 +62,6 @@ def update_obj_in_db(data: dict, session: Session):
 
     if existing_vacancy:
         # Если объект Vacancy существует, просто обновляем его атрибуты
-        # existing_vacancy.vac_url = data['vac_url']  # не нужен
         existing_vacancy.vac_name = data['vac_name']
         existing_vacancy.vac_exp = data['vac_exp']
         existing_vacancy.vac_salary_min = data['vac_salary_min']
