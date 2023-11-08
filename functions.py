@@ -3,12 +3,9 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from tqdm import tqdm
-from db import Vacancy
 import re
 import datetime
-from sqlalchemy.orm import Session
 from constants import BAD_WORDS
-# from datetime import datetime as dt
 
 
 def authorization_hh(driver: webdriver.Chrome, url, email, password):
@@ -64,7 +61,6 @@ def from_my_resumes_to_recomended_vacations(driver: webdriver.Chrome):
     """ Переход cо страницы резюме на список рекомендуемых вакансий.
     """
     print('Getting vacancies list...')
-    # vacancies = driver.find_element(By.XPATH,'/html/body/div[5]/div/div[3]/div[1]/div/div/div[1]/div[5]/div/div/div[6]/div/div[2]/a') # noqa
     vacancies = driver.find_element(By.XPATH, "/html/body/div[5]/div/div[3]/div[1]/div/div/div[1]/div[6]/div[1]/div/div[6]/div/div[2]/a")  # noqa
     vacancies.click()
     time.sleep(1)
@@ -132,7 +128,8 @@ def get_vacancy_urls_on_page(page_url: str, driver: webdriver.Chrome) -> list:
         try:
             vac_name = (vacancy.find_element(By.XPATH, "//a[@data-qa='serp-item__title']").text).lower() # noqa
             vac_name_words = vac_name.split()
-            has_common = any(element in vac_name_words for element in BAD_WORDS) # noqa
+            has_common = any(element.lower() in vac_name_words for element in BAD_WORDS) # noqa
+            # если имеются соответствия url такой вакансии не включается в перечень для парсинга  # noqa
             if has_common:
                 continue
             vac_url = vacancy.find_element(By.TAG_NAME, "a").get_attribute("href") # noqa
@@ -229,21 +226,3 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
         'requirements': requirements_data
     }
     return vacancy_data
-
-
-def vacancy_exist(session: Session, vacancy_url: str) -> bool:
-    """Проверяет есть ли в базе данных вакансия по url"""
-    return session.query(Vacancy).filter_by(vac_url=vacancy_url).first()
-
-
-def vacancy_old(session: Session, vacancy_url: str) -> bool:
-    """Проверяет есть ли в базе данных вакансия
-    с давностью 5 и более дней по url"""
-    params = '%Y-%m-%d'
-    current_date = datetime.date.today()
-    vacancy = session.query(Vacancy).filter_by(vac_url=vacancy_url).first()
-    vacancy_date = datetime.datetime.strptime(vacancy.vac_date_parse, params).date()  # noqa
-    delta = current_date - vacancy_date
-    if delta.days > 5:
-        return True
-    return False

@@ -55,7 +55,6 @@ result_junior = junior_query.all()
 # Сортируем список кортежей по убыванию второго элемента
 result_junior_sorted = sorted(result_junior, key=lambda x: x[1], reverse=True)
 
-# percent_data = [[requirement, f'{count/junior_vacancy_count*100:.0f}%'] for requirement, count in result_junior_sorted if count/junior_vacancy_count*100 >= 10]  # noqa
 percent_data = [[requirement, f'{count/junior_vacancy_count*100:.0f}'] for requirement, count in result_junior_sorted if count/junior_vacancy_count*100 >= 10] # noqa
 
 
