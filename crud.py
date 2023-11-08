@@ -1,9 +1,9 @@
 from __future__ import annotations
 from sqlalchemy.orm import Session
 
-# from typing import List
 from db import Vacancy, Requirement
 import datetime
+from constants import INCORRECT_REQUIREMENTS
 
 
 def vacancy_exist(session: Session, vacancy_url: str) -> bool:
@@ -25,7 +25,9 @@ def vacancy_old(session: Session, vacancy_url: str, time_old: int = 5) -> bool:
 
 
 def create_obj_in_db(data: dict, session: Session):
-    # TODO настроить обработку, если объект давно парсился или не создан
+    """Создание объекта вакансии и требований в БД.
+    Принимает на вход словарь.
+    """
     existing_vacancy = session.query(Vacancy).filter_by(id=data['vac_number']).first()  # noqa
 
     if not existing_vacancy:
@@ -48,16 +50,18 @@ def create_obj_in_db(data: dict, session: Session):
                 # Если объект Requirement с таким именем уже существует, связываем его с объектом Vacancy # noqa
                 obj.requirement.append(existing_requirement)
             else:
-                # Если объект Requirement не существует, создаем новый
-                requirement = Requirement(name=requirement_name)
-                obj.requirement.append(requirement)
+                # Если объект Requirement не существует,
+                # проверяю на корректность и создаю новый
+                if requirement_name not in INCORRECT_REQUIREMENTS:
+                    requirement = Requirement(name=requirement_name)
+                    obj.requirement.append(requirement)
         # Сохраняем изменения в базе данных
         session.commit()
 
 
 def update_obj_in_db(data: dict, session: Session):
-    """На вход получает данные вакансии и обновляет все данные объекта."""
-    # TODO настроить обработку, если объект давно парсился или не создан
+    """Обновляет данные вакансии и требований.
+    Принимает на вход словарь"""
     existing_vacancy = session.query(Vacancy).filter_by(id=data['vac_number']).first()  # noqa
 
     if existing_vacancy:
@@ -73,15 +77,17 @@ def update_obj_in_db(data: dict, session: Session):
         # Удаляем все текущие связи объекта Vacancy с Requirement
         existing_vacancy.requirement.clear()
         for requirement_name in requirements:
-            # узнаю есть ли такое тревание уже в базе
+            # узнаю есть ли такое требование уже в базе
             existing_requirement = session.query(Requirement).filter_by(name=requirement_name).first()  # noqa
             if existing_requirement:
                 # Если объект Requirement с таким именем уже существует, связываем его с объектом Vacancy # noqa
                 existing_vacancy.requirement.append(existing_requirement)
             else:
-                # Если объект Requirement не существует, создаем новый
-                requirement = Requirement(name=requirement_name)
-                existing_vacancy.requirement.append(requirement)
+                # Если объект Requirement не существует,
+                # проверяю на корректность и создаю новый
+                if requirement_name not in INCORRECT_REQUIREMENTS:
+                    requirement = Requirement(name=requirement_name)
+                    existing_vacancy.requirement.append(requirement)
         # Сохраняем изменения в базе данных
         session.commit()
 

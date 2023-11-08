@@ -1,5 +1,8 @@
 from __future__ import annotations
-from sqlalchemy import create_engine, Column, Integer, String, Table
+from sqlalchemy import (create_engine, Column, Integer,
+                        String, Table,
+                        # Boolean
+                        )
 from sqlalchemy.orm import declarative_base, Session
 
 from typing import List
@@ -49,6 +52,7 @@ class Requirement(Base):
         secondary=vacancy_requirement_table,
         back_populates="requirement")
     name: Mapped[str] = mapped_column(String(200), default=None)
+    # in_stock: Mapped[bool] = mapped_column(Boolean, default=False)
 
     def __repr__(self) -> str:
         return self.name

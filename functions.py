@@ -5,7 +5,7 @@ from selenium import webdriver
 from tqdm import tqdm
 import re
 import datetime
-from constants import BAD_WORDS
+from constants import INCORRECT_NAMES
 
 
 def authorization_hh(driver: webdriver.Chrome, url, email, password):
@@ -108,14 +108,6 @@ def get_vacancy_requirements(mess: str) -> set:
     requirements = {re.sub(r'^-+|-+$', '', requirement.lower()) for requirement in requirements}  # noqa
     return requirements
 
-    # TODO: зп пересчитывать сразу в одном формате - на руки
-    # TODO: предусмотреть пересчет зп для уже внесенных позиций по которым зп с налогом  # noqa
-    # TODO: не проверять позиции, которые есть в БД
-    # TODO: не проверять позиции, которые есть в БД, за исключением случая если давность дня 3  # noqa
-    # TODO: возможно учитывать требования к вакансии отдельно навыки и в тексте
-    # TODO: научиться делить данные в тексте на обязательные и желательные дополнительно  # noqa
-    # TODO: если нет данных о зп ни с налогом ни без, вносить сведение об отсутствии данных  # noqa
-
 
 def get_vacancy_urls_on_page(page_url: str, driver: webdriver.Chrome) -> list:
     """ Получаю список url вакансий на странице.
@@ -128,7 +120,7 @@ def get_vacancy_urls_on_page(page_url: str, driver: webdriver.Chrome) -> list:
         try:
             vac_name = (vacancy.find_element(By.XPATH, "//a[@data-qa='serp-item__title']").text).lower() # noqa
             vac_name_words = vac_name.split()
-            has_common = any(element.lower() in vac_name_words for element in BAD_WORDS) # noqa
+            has_common = any(element.lower() in vac_name_words for element in INCORRECT_NAMES) # noqa
             # если имеются соответствия url такой вакансии не включается в перечень для парсинга  # noqa
             if has_common:
                 continue
