@@ -48,9 +48,10 @@ service = Service(
 )
 
 # brouser
-driver = webdriver.Chrome(service=service,
-                          options=options)
+# driver = webdriver.Chrome(service=service,
+#                           options=options)
 
+driver = webdriver.Chrome(options=options)
 # start
 try:
     authorization_hh(driver, LOGIN_URL, email, password)
