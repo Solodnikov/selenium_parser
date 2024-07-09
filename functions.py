@@ -14,25 +14,30 @@ def authorization_hh(driver: webdriver.Chrome, url, email, password):
     print('Authorization...')
 
     driver.get(url=url)
-   
+    # input_email
     input_email = driver.find_element(By.NAME, "login")
     input_email.clear()
     input_email.send_keys(email)
     time.sleep(1)
 
     # open_password
-    password_button = driver.find_element(By.XPATH, "/html/body/div[5]/div/div[3]/div[1]/div/div/div/div/div/div[1]/div[1]/div/div[2]/form/div[4]/button[2]") # noqa
-    password_button.click()
+    open_password_form = driver.find_element(
+        By.CLASS_NAME, 'account-login-actions').find_elements(
+            By.TAG_NAME, 'button')[1]
+    open_password_form.click()
     time.sleep(1)
 
     # input_password
-    input_password = driver.find_element(By.XPATH, "/html/body/div[5]/div/div[3]/div[1]/div/div/div/div/div/div[1]/div[1]/div/form/div[2]/fieldset/input") # noqa
+    input_password = driver.find_element(By.XPATH, "/html/body/div[5]/div/div/div[1]/div[4]/div[1]/div/div/div/div/div/div[1]/div/div/form/div[2]/fieldset/input") # noqa
     input_password.clear()
     input_password.send_keys(password)
     time.sleep(1)
 
-    # enter
-    enter_button = driver.find_element(By.XPATH, "/html/body/div[5]/div/div[3]/div[1]/div/div/div/div/div/div[1]/div[1]/div/form/div[6]/button[1]") # noqa
+    # enter"
+    enter_button = driver.find_element(
+        By.CLASS_NAME,
+        "account-login-actions").find_element(
+            By.TAG_NAME, "button")
     enter_button.click()
 
     time.sleep(1)
