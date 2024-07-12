@@ -58,18 +58,20 @@ def from_main_to_my_resumes(driver: webdriver.Chrome):
     """ Переход c главной страницы на страницу резюме.
     """
     print('Choosing my resume...')
-    # my_resume_button = driver.find_element(By.XPATH,"//a[@data-qa='mainmenu_myResumes']") # noqa
-    bar = driver.find_element(
-        By.XPATH,
-        "//span[@class='supernova-icon supernova-icon_mobile']"
-    )
-    bar.click()
+    my_resume_button = driver.find_element(By.XPATH,"//a[@data-qa='mainmenu_myResumes']") # noqa
     time.sleep(2)
-    my_resume_button = driver.find_element(
-        By.CLASS_NAME,
-        'supernova-dropdown-option'
-    )
     my_resume_button.click()
+    # bar = driver.find_element(
+    #     By.XPATH,
+    #     "//span[@class='supernova-icon supernova-icon_mobile']"
+    # )
+    # bar.click()
+    # time.sleep(2)
+    # my_resume_button = driver.find_element(
+    #     By.CLASS_NAME,
+    #     'supernova-dropdown-option'
+    # )
+    # my_resume_button.click()
     time.sleep(2)
 
 
@@ -77,7 +79,9 @@ def from_my_resumes_to_recomended_vacations(driver: webdriver.Chrome):
     """ Переход cо страницы резюме на список рекомендуемых вакансий.
     """
     print('Getting vacancies list...')
-    vacancies = driver.find_element(By.XPATH, "/html/body/div[5]/div/div[3]/div[1]/div/div/div[1]/div[6]/div[1]/div/div[6]/div/div[2]/a")  # noqa
+    vacancies = driver.find_elements(
+        By.XPATH,
+        "//a[@data-qa='resume-recommendations__button_editResume']")[1]
     vacancies.click()
     time.sleep(1)
 
