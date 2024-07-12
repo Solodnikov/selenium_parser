@@ -28,7 +28,6 @@ def authorization_hh(driver: webdriver.Chrome, url, email, password):
     time.sleep(1)
 
     # input_password
-    # input_password = driver.find_element(By.XPATH, "/html/body/div[5]/div/div/div[1]/div[4]/div[1]/div/div/div/div/div/div[1]/div/div/form/div[2]/fieldset/input") # noqa
     input_password = driver.find_element(
         By.XPATH, "//input[@data-qa='login-input-password']")
     input_password.clear()
@@ -42,7 +41,7 @@ def authorization_hh(driver: webdriver.Chrome, url, email, password):
             By.TAG_NAME, "button")
     enter_button.click()
 
-    time.sleep(1)
+    time.sleep(5)
     print('Authorization - Done')
 
 
@@ -59,9 +58,19 @@ def from_main_to_my_resumes(driver: webdriver.Chrome):
     """ Переход c главной страницы на страницу резюме.
     """
     print('Choosing my resume...')
-    my_resume_button = driver.find_element(By.XPATH,"//a[@data-qa='mainmenu_myResumes']") # noqa
+    # my_resume_button = driver.find_element(By.XPATH,"//a[@data-qa='mainmenu_myResumes']") # noqa
+    bar = driver.find_element(
+        By.XPATH,
+        "//span[@class='supernova-icon supernova-icon_mobile']"
+    )
+    bar.click()
+    time.sleep(2)
+    my_resume_button = driver.find_element(
+        By.CLASS_NAME,
+        'supernova-dropdown-option'
+    )
     my_resume_button.click()
-    time.sleep(1)
+    time.sleep(2)
 
 
 def from_my_resumes_to_recomended_vacations(driver: webdriver.Chrome):
