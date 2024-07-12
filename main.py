@@ -23,6 +23,8 @@ from constants import (LOGIN_URL,
                        WEB_DRIVER_PATH,
                        PARSE_PAUSE,
                        MAX_PARSE)
+from selenium.webdriver.chrome.service import Service as ChromiumService
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 load_dotenv()
@@ -51,7 +53,11 @@ service = Service(
 # driver = webdriver.Chrome(service=service,
 #                           options=options)
 
-driver = webdriver.Chrome(options=options)
+driver = webdriver.Chrome(options=options,
+                          service=ChromiumService(
+                              ChromeDriverManager().install()
+                          ))
+
 # start
 try:
     authorization_hh(driver, LOGIN_URL, email, password)

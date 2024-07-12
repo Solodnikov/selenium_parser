@@ -28,7 +28,9 @@ def authorization_hh(driver: webdriver.Chrome, url, email, password):
     time.sleep(1)
 
     # input_password
-    input_password = driver.find_element(By.XPATH, "/html/body/div[5]/div/div/div[1]/div[4]/div[1]/div/div/div/div/div/div[1]/div/div/form/div[2]/fieldset/input") # noqa
+    # input_password = driver.find_element(By.XPATH, "/html/body/div[5]/div/div/div[1]/div[4]/div[1]/div/div/div/div/div/div[1]/div/div/form/div[2]/fieldset/input") # noqa
+    input_password = driver.find_element(
+        By.XPATH, "//input[@data-qa='login-input-password']")
     input_password.clear()
     input_password.send_keys(password)
     time.sleep(1)
