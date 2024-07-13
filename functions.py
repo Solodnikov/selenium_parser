@@ -54,28 +54,23 @@ def check_driver(driver: webdriver.Chrome):
     time.sleep(1)
 
 
-def from_main_to_my_resumes(driver: webdriver.Chrome):
+def from_main_to_my_resumes(
+        driver: webdriver.Chrome,
+        sleep_time: int = 2
+) -> None:
     """ Переход c главной страницы на страницу резюме.
     """
     print('Choosing my resume...')
     my_resume_button = driver.find_element(By.XPATH,"//a[@data-qa='mainmenu_myResumes']") # noqa
-    time.sleep(2)
+    time.sleep(sleep_time)
     my_resume_button.click()
-    # bar = driver.find_element(
-    #     By.XPATH,
-    #     "//span[@class='supernova-icon supernova-icon_mobile']"
-    # )
-    # bar.click()
-    # time.sleep(2)
-    # my_resume_button = driver.find_element(
-    #     By.CLASS_NAME,
-    #     'supernova-dropdown-option'
-    # )
-    # my_resume_button.click()
-    time.sleep(2)
+    time.sleep(sleep_time)
 
 
-def from_my_resumes_to_recomended_vacations(driver: webdriver.Chrome):
+def from_my_resumes_to_recomended_vacations(
+        driver: webdriver.Chrome,
+        sleep_time: int = 2
+) -> None:
     """ Переход cо страницы резюме на список рекомендуемых вакансий.
     """
     print('Getting vacancies list...')
@@ -83,10 +78,12 @@ def from_my_resumes_to_recomended_vacations(driver: webdriver.Chrome):
         By.XPATH,
         "//a[@data-qa='resume-recommendations__button_editResume']")[1]
     vacancies.click()
-    time.sleep(1)
+    time.sleep(sleep_time)
 
 
-def get_pages_urls(driver: webdriver.Chrome):
+def get_pages_urls(
+        driver: webdriver.Chrome
+) -> list:
     """ Находясь на 1 страницы списка вакансий,
     получает адреса всех страниц списков вакансий с пагинатора.
     """
@@ -105,7 +102,9 @@ def get_pages_urls(driver: webdriver.Chrome):
     return pages_urls
 
 
-def get_vacancy_number_from_url(page_url: str) -> int:
+def get_vacancy_number_from_url(
+        page_url: str
+) -> int | None:
     """ Получаю номер вакансии из строки url адреса вакансии.
     """
     pattern = r"/vacancy/(\d+)"
@@ -115,7 +114,9 @@ def get_vacancy_number_from_url(page_url: str) -> int:
     return None
 
 
-def get_vacancy_requirements(mess: str) -> set:
+def get_vacancy_requirements(
+        mess: str
+) -> set:
     """Из строки вычленяет все латинские слова,
     возвращает список.
     Пассивная защита - если получено более 30 объектов,
@@ -129,16 +130,26 @@ def get_vacancy_requirements(mess: str) -> set:
     return requirements
 
 
-def get_vacancy_urls_on_page(page_url: str, driver: webdriver.Chrome) -> list:
+def get_vacancy_urls_on_page(
+        page_url: str,
+        driver: webdriver.Chrome
+) -> list:
     """ Получаю список url вакансий на странице.
     """
     print('Getting page url...')
     driver.get(url=page_url)
     vacancy_data = []
-    vacancy_list = driver.find_elements(By.CLASS_NAME, 'vacancy-serp-item__layout') # noqa
-    for vacancy in tqdm(vacancy_list):
+    main_vacancies_block = driver.find_element(
+        By.XPATH,
+        "//div[@data-qa='vacancy-serp__results']")
+    vacancies_blocks = main_vacancies_block.find_elements(
+        By.CLASS_NAME,
+        'serp-item__title-link-wrapper')
+
+    # vacancy_list = driver.find_elements(By.CLASS_NAME, 'vacancy-serp-item__layout') # noqa
+    for vacancy in tqdm(vacancies_blocks):
         try:
-            vac_name = (vacancy.find_element(By.XPATH, "//a[@data-qa='serp-item__title']").text).lower() # noqa
+            vac_name = (vacancy.find_element(By.XPATH, "//span[@data-qa='serp-item__title']").text).lower() # noqa
             vac_name_words = vac_name.split()
             has_common = any(element.lower() in vac_name_words for element in INCORRECT_NAMES) # noqa
             # если имеются соответствия url такой вакансии не включается в перечень для парсинга  # noqa
