@@ -20,5 +20,5 @@ INCORRECT_NAMES = [
 ]
 INCORRECT_REQUIREMENTS = ['online', 'no', 'afterwork', 'it', 'to', 'language',]
 
-MIN_BORDER_SALARY: int = 30000
-MAX_BORDER_SALARY: int = 150000
+MIN_BORDER_SALARY: int = 50000
+MAX_BORDER_SALARY: int = 200000

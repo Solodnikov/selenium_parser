@@ -25,7 +25,7 @@ all_query = session.query(Requirement.name, func.count(vacancy_requirement_table
 
 def get_junior_query_requirements(
         session: Session,
-        percent_cutoff: int = 8):
+        percent_cutoff: int = 5):
     """ Возвращает список, списков по убыванию int(процент),
     в формате list[list[str,int]]
     """
