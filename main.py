@@ -50,13 +50,13 @@ service = Service(
 )
 
 # brouser
-# driver = webdriver.Chrome(service=service,
-#                           options=options)
+driver = webdriver.Chrome(service=service,
+                          options=options)
 
-driver = webdriver.Chrome(options=options,
-                          service=ChromiumService(
-                              ChromeDriverManager().install()
-                          ))
+# driver = webdriver.Chrome(options=options,
+#                           service=ChromiumService(
+#                               ChromeDriverManager().install()
+#                           ))
 
 # start
 try:
@@ -96,6 +96,7 @@ try:
                         continue
             # если исчерпан счетчик, обновляем счетчик, выдерживаем паузу
             else:
+                print(f"It is time limit reached. Waiting {PARSE_PAUSE} seconds") # noqa
                 parse_counter = 0
                 time.sleep(PARSE_PAUSE)
 

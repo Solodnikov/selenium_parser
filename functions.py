@@ -61,7 +61,11 @@ def from_main_to_my_resumes(
     """ Переход c главной страницы на страницу резюме.
     """
     print('Choosing my resume...')
-    my_resume_button = driver.find_element(By.XPATH,"//a[@data-qa='mainmenu_myResumes']") # noqa
+    my_resume_button = driver.find_elements(
+        By.XPATH,
+        "//div[@data-source='src/components/SupernovaMainMenu/SupernovaActionLink/index.tsx:78']" # noqa
+    )[0] # noqa
+    # my_resume_button = driver.find_element(By.XPATH,"//a[@data-qa='mainmenu_myResumes']") # noqa
     time.sleep(sleep_time)
     my_resume_button.click()
     time.sleep(sleep_time)
@@ -74,9 +78,12 @@ def from_my_resumes_to_recomended_vacations(
     """ Переход cо страницы резюме на список рекомендуемых вакансий.
     """
     print('Getting vacancies list...')
-    vacancies = driver.find_elements(
-        By.XPATH,
-        "//a[@data-qa='resume-recommendations__button_editResume']")[1]
+    vacancies = driver.find_elements(By.XPATH, "//a[@source='src/pages/ApplicantResumes/components/ResumeButtons.jsx:79']")[1]
+    # vacancies = driver.find_elements(By.CLASS_NAME, "bloko-button bloko-button_kind-primary bloko-button_scale-small bloko-button_stretched bloko-button_appearance-outlined")[0]
+    # vacancies = driver.find_element(
+    #     By.XPATH,
+    #     "//a[@data-qa='resume-recommendations__button_updateResume']"
+    # )
     vacancies.click()
     time.sleep(sleep_time)
 
@@ -88,10 +95,13 @@ def get_pages_urls(
     получает адреса всех страниц списков вакансий с пагинатора.
     """
     print('Getting pages urls...')
-    paginator_block = driver.find_element(By.XPATH, "//div[@data-qa='pager-block']") # noqa
-    # получаю количество страниц
+    paginator_block = driver.find_element(By.CLASS_NAME, "magritte-number-pages-container___YIJLn_4-0-14") # noqa
     last_page_number = paginator_block.find_elements(
-        By.CLASS_NAME, 'pager-item-not-in-short-range')[-1].text
+        By.TAG_NAME, "li")[-2].text
+    # paginator_block = driver.find_element(By.XPATH, "//div[@data-qa='pager-block']") # noqa
+    # получаю количество страниц
+    # last_page_number = paginator_block.find_elements(
+    #     By.CLASS_NAME, 'pager-item-not-in-short-range')[-1].text
     url_form = driver.current_url
     # собираю список страниц
     pages_urls = []
@@ -142,14 +152,16 @@ def get_vacancy_urls_on_page(
     main_vacancies_block = driver.find_element(
         By.XPATH,
         "//div[@data-qa='vacancy-serp__results']")
-    vacancies_blocks = main_vacancies_block.find_elements(
-        By.CLASS_NAME,
-        'serp-item__title-link-wrapper')
+    vacancies_blocks = main_vacancies_block.find_elements(By.CLASS_NAME, "vacancy-info--umZA61PpMY07JVJtomBA") # noqa
+    # vacancy-info--umZA61PpMY07JVJtomBA
+    # vacancies_blocks = main_vacancies_block.find_elements(
+    #     By.CLASS_NAME,
+    #     'serp-item__title-link-wrapper')
 
     # vacancy_list = driver.find_elements(By.CLASS_NAME, 'vacancy-serp-item__layout') # noqa
     for vacancy in tqdm(vacancies_blocks):
         try:
-            vac_name = (vacancy.find_element(By.XPATH, "//span[@data-qa='serp-item__title']").text).lower() # noqa
+            vac_name = (vacancy.find_element(By.XPATH, "//span[@data-qa='serp-item__title-text']").text).lower() # noqa
             vac_name_words = vac_name.split()
             has_common = any(element.lower() in vac_name_words for element in INCORRECT_NAMES) # noqa
             # если имеются соответствия url такой вакансии не включается в перечень для парсинга  # noqa
@@ -162,11 +174,12 @@ def get_vacancy_urls_on_page(
     return vacancy_data
 
 
-def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
+def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome, sleep_time: int = 1):
     """ По url получаю все сведения по вакансии.
     """
     print(f'получаю вседения по вакансии url {vacancy_url}')
     driver.get(vacancy_url)
+    time.sleep(sleep_time)
 
     # БЛОК ПОЛУЧЕНИЯ ЗП
     # получаю зп без налога
@@ -210,9 +223,11 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome):
     # БЛОК ПОЛУЧЕНИЯ НАВЫКОВ
     # получение навыков из раздела навыков
     try:
-        vac_skills = driver.find_element(
-            By.CLASS_NAME, "bloko-tag-list").find_elements(
-                By.XPATH, "//span[@data-qa='bloko-tag__text']")
+        vac_skills = driver.find_elements(By.XPATH, "//li[@data-qa='skills-element']")
+
+        # vac_skills = driver.find_element(
+        #     By.CLASS_NAME, "bloko-tag-list").find_elements(
+        #         By.XPATH, "//span[@data-qa='bloko-tag__text']")
         skill_set = set(skill.text.lower() for skill in vac_skills)
     except NoSuchElementException:
         skill_set = None
