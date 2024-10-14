@@ -95,8 +95,7 @@ def get_pages_urls(
     """
     print('Getting pages urls...')
     paginator_block = driver.find_element(By.CLASS_NAME, "magritte-number-pages-container___YIJLn_4-0-14") # noqa
-    last_page_number = paginator_block.find_elements(
-        By.TAG_NAME, "li")[-2].text
+    last_page_number = paginator_block.find_elements(By.TAG_NAME, "li")[-2].text
     # paginator_block = driver.find_element(By.XPATH, "//div[@data-qa='pager-block']") # noqa
     # получаю количество страниц
     # last_page_number = paginator_block.find_elements(
