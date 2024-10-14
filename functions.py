@@ -21,10 +21,10 @@ def authorization_hh(driver: webdriver.Chrome, url, email, password):
     time.sleep(1)
 
     # open_password
-    open_password_form = driver.find_element(
-        By.CLASS_NAME, 'account-login-actions').find_elements(
-            By.TAG_NAME, 'button')[1]
-    open_password_form.click()
+    # open_password_form = driver.find_element(By.CLASS_NAME, 'account-login-actions').find_elements(By.TAG_NAME, 'button')[1]
+    # block_password = driver.find_element(By.CLASS_NAME, 'account-login-actions')
+    password_form = driver.find_element(By.XPATH, "//span[@data-qa='expand-login-by-password-text']")
+    password_form.click()
     time.sleep(1)
 
     # input_password
@@ -61,11 +61,12 @@ def from_main_to_my_resumes(
     """ Переход c главной страницы на страницу резюме.
     """
     print('Choosing my resume...')
-    my_resume_button = driver.find_elements(
-        By.XPATH,
-        "//div[@data-source='src/components/SupernovaMainMenu/SupernovaActionLink/index.tsx:78']" # noqa
-    )[0] # noqa
-    # my_resume_button = driver.find_element(By.XPATH,"//a[@data-qa='mainmenu_myResumes']") # noqa
+    # my_resume_button = driver.find_elements(
+    #     By.XPATH,
+    #     "//div[@data-source='src/components/SupernovaMainMenu/SupernovaActionLink/index.tsx:78']" # noqa
+    # )[0] # noqa
+
+    my_resume_button = driver.find_element(By.XPATH,"//a[@data-qa='mainmenu_myResumes']") # noqa
     time.sleep(sleep_time)
     my_resume_button.click()
     time.sleep(sleep_time)
@@ -78,12 +79,10 @@ def from_my_resumes_to_recomended_vacations(
     """ Переход cо страницы резюме на список рекомендуемых вакансий.
     """
     print('Getting vacancies list...')
-    vacancies = driver.find_elements(By.XPATH, "//a[@source='src/pages/ApplicantResumes/components/ResumeButtons.jsx:79']")[1]
+    # vacancies = driver.find_elements(By.XPATH, "//a[@source='src/pages/ApplicantResumes/components/ResumeButtons.jsx:79']")[1]
     # vacancies = driver.find_elements(By.CLASS_NAME, "bloko-button bloko-button_kind-primary bloko-button_scale-small bloko-button_stretched bloko-button_appearance-outlined")[0]
-    # vacancies = driver.find_element(
-    #     By.XPATH,
-    #     "//a[@data-qa='resume-recommendations__button_updateResume']"
-    # )
+    vacancies = driver.find_element(
+        By.XPATH, "//a[@data-qa='resume-recommendations__button_updateResume']")
     vacancies.click()
     time.sleep(sleep_time)
 
