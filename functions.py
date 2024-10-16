@@ -79,10 +79,16 @@ def from_my_resumes_to_recomended_vacations(
     """ Переход cо страницы резюме на список рекомендуемых вакансий.
     """
     print('Getting vacancies list...')
-    # vacancies = driver.find_elements(By.XPATH, "//a[@source='src/pages/ApplicantResumes/components/ResumeButtons.jsx:79']")[1]
-    # vacancies = driver.find_elements(By.CLASS_NAME, "bloko-button bloko-button_kind-primary bloko-button_scale-small bloko-button_stretched bloko-button_appearance-outlined")[0]
-    vacancies = driver.find_element(
-        By.XPATH, "//a[@data-qa='resume-recommendations__button_updateResume']")
+    xpath_list = [
+        "//a[@data-qa='resume-recommendations__button_updateResume']",
+        "//a[@data-qa='resume-recommendations__button_editResume']"
+    ]
+    for xpath in xpath_list:
+        try:
+            vacancies = driver.find_element(By.XPATH, xpath)
+            break
+        except NoSuchElementException:
+            print('No such element')
     vacancies.click()
     time.sleep(sleep_time)
 
