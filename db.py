@@ -5,12 +5,14 @@ from sqlalchemy import (create_engine, Column, Integer,
                         )
 from sqlalchemy.orm import declarative_base, Session
 
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+
+# from crud import vacancy_exist
 
 
 Base = declarative_base()
@@ -28,10 +30,24 @@ vacancy_requirement_table = Table(
 )
 
 
+class Company(Base):
+    __tablename__ = 'company'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str | None] = mapped_column(String(50), default=None)
+    rank: Mapped[int | None] = mapped_column(Integer, default=None)
+    location: Mapped[str | None] = mapped_column(String(50), default=None)
+    vacancy: Mapped[Optional["Vacancy"]] = relationship(back_populates="company")
+
+
+# class CompanyActivity(Base):
+#     __tablename__ = 'company_activity'
+#     id: Mapped[int] = mapped_column(primary_key=True)
+
+
 class Vacancy(Base):
     __tablename__ = 'vacancy'
     id: Mapped[int] = mapped_column(primary_key=True)
-    requirement: Mapped[List["Requirement"] | None] = relationship(
+    requirement: Mapped[Optional["Requirement"]] = relationship(
         secondary=vacancy_requirement_table,
         back_populates="vacancy")
     vac_name: Mapped[str | None] = mapped_column(String(200), default=None)
@@ -40,6 +56,8 @@ class Vacancy(Base):
     vac_salary_max: Mapped[int | None] = mapped_column(Integer, default=None)
     vac_url: Mapped[str] = mapped_column(String(200), default=None)
     vac_date_parse: Mapped[str] = mapped_column(String(200), default=None)
+    company_id: Mapped[Optional[int]] = mapped_column(ForeignKey('company.id'))
+    company: Mapped[Optional["Company"]] = relationship(back_populates="vacancy")
 
     def __repr__(self) -> str:
         return f"{self.id}, {self.vac_name}, {self.vac_exp}"

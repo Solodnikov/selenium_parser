@@ -81,7 +81,8 @@ def from_my_resumes_to_recomended_vacations(
     print('Getting vacancies list...')
     xpath_list = [
         "//a[@data-qa='resume-recommendations__button_updateResume']",
-        "//a[@data-qa='resume-recommendations__button_editResume']"
+        "//a[@data-qa='resume-recommendations__button_editResume']",
+        "//a[@data-qa='resume-recommendations__button_respond']",
     ]
     for xpath in xpath_list:
         try:
@@ -100,7 +101,8 @@ def get_pages_urls(
     получает адреса всех страниц списков вакансий с пагинатора.
     """
     print('Getting pages urls...')
-    paginator_block = driver.find_element(By.CLASS_NAME, "magritte-number-pages-container___YIJLn_4-0-14") # noqa
+    paginator_block = driver.find_element(By.XPATH, "//*[contains(@class, 'magritte-number-pages-container')]")
+    # paginator_block = driver.find_element(By.CLASS_NAME, "magritte-number-pages-container___YIJLn_4-0-14") # noqa
     last_page_number = paginator_block.find_elements(By.TAG_NAME, "li")[-2].text
     # paginator_block = driver.find_element(By.XPATH, "//div[@data-qa='pager-block']") # noqa
     # получаю количество страниц
@@ -153,10 +155,9 @@ def get_vacancy_urls_on_page(
     print('Getting page url...')
     driver.get(url=page_url)
     vacancy_data = []
-    main_vacancies_block = driver.find_element(
-        By.XPATH,
-        "//div[@data-qa='vacancy-serp__results']")
-    vacancies_blocks = main_vacancies_block.find_elements(By.CLASS_NAME, "vacancy-info--umZA61PpMY07JVJtomBA") # noqa
+    main_vacancies_block = driver.find_element(By.XPATH,"//div[@data-qa='vacancy-serp__results']")
+    vacancies_blocks = main_vacancies_block.find_elements(By.XPATH, "//*[contains(@class, 'vacancy-info')]")
+    # vacancies_blocks = main_vacancies_block.find_elements(By.CLASS_NAME, "vacancy-info--umZA61PpMY07JVJtomBA") # noqa
     # vacancy-info--umZA61PpMY07JVJtomBA
     # vacancies_blocks = main_vacancies_block.find_elements(
     #     By.CLASS_NAME,
@@ -268,3 +269,18 @@ def get_vacancy_full_info(vacancy_url: str, driver: webdriver.Chrome, sleep_time
         'requirements': requirements_data
     }
     return vacancy_data
+
+
+def chouser_right_block(
+        xpath_array: list,
+        driver: webdriver.Chrome,
+        sleep_time: int = 2
+):
+    for xpath in xpath_array:
+        try:
+            block = driver.find_element(By.XPATH, xpath)
+            time.sleep(sleep_time)
+            break
+        except NoSuchElementException:
+            print('No such element')
+    return block
