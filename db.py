@@ -47,9 +47,13 @@ class Company(Base):
 class Vacancy(Base):
     __tablename__ = 'vacancy'
     id: Mapped[int] = mapped_column(primary_key=True)
-    requirement: Mapped[Optional["Requirement"]] = relationship(
+    # requirement: Mapped[Optional["Requirement"]] = relationship(
+    #     secondary=vacancy_requirement_table,
+    #     back_populates="vacancy")
+    requirements: Mapped[List["Requirement"]] = relationship(
         secondary=vacancy_requirement_table,
-        back_populates="vacancy")
+        back_populates="vacancies",
+    )
     vac_name: Mapped[str | None] = mapped_column(String(200), default=None)
     vac_exp: Mapped[str | None] = mapped_column(String(200), default=None)
     vac_salary_min: Mapped[int | None] = mapped_column(Integer, default=None)
@@ -66,9 +70,13 @@ class Vacancy(Base):
 class Requirement(Base):
     __tablename__ = 'requirement'
     id: Mapped[int] = mapped_column(primary_key=True)
-    vacancy: Mapped[List['Vacancy'] | None] = relationship(
+    # vacancy: Mapped[List['Vacancy'] | None] = relationship(
+    #     secondary=vacancy_requirement_table,
+    #     back_populates="requirement")
+    vacancies: Mapped[List["Vacancy"]] = relationship(
         secondary=vacancy_requirement_table,
-        back_populates="requirement")
+        back_populates="requirements",
+    )
     name: Mapped[str] = mapped_column(String(200), default=None)
     # in_stock: Mapped[bool] = mapped_column(Boolean, default=False)
 
@@ -98,11 +106,13 @@ def create_obj_in_db(data: dict, session: Session):
             existing_requirement = session.query(Requirement).filter_by(name=requirement_name).first()  # noqa
             if existing_requirement:
                 # Если объект Requirement с таким именем уже существует, связываем его с объектом Vacancy # noqa
-                obj.requirement.append(existing_requirement)
+                # obj.requirement.append(existing_requirement)
+                obj.requirements.append(existing_requirement)
             else:
                 # Если объект Requirement не существует, создаем новый
-                requirement = Requirement(name=requirement_name)
-                obj.requirement.append(requirement)
+                new_requirement = Requirement(name=requirement_name)
+                # obj.requirement.append(requirement)
+                obj.requirements.append(new_requirement)
         # Сохраняем изменения в базе данных
         session.commit()
 
