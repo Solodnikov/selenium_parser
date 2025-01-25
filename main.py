@@ -42,7 +42,7 @@ options.add_argument(f'user-agent={useragent.chrome}')
 options.add_argument('--disable-blink-features=AutomationControlled')
 
 # headless mode
-options.add_argument('--headless')
+# options.add_argument('--headless')
 
 # подключение веб драйвера
 service = Service(

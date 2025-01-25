@@ -1,18 +1,14 @@
 from __future__ import annotations
-from sqlalchemy import (create_engine, Column, Integer,
-                        String, Table,
-                        # Boolean
-                        )
-from sqlalchemy.orm import declarative_base, Session
-
 from typing import List, Optional
 
+from sqlalchemy import (create_engine, Column, Integer,
+                        String, Table,
+                        )
+from sqlalchemy.orm import declarative_base, Session
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-
-# from crud import vacancy_exist
 
 
 Base = declarative_base()
