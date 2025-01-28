@@ -1,11 +1,11 @@
-from sqlalchemy import func
-from db import session, Requirement, vacancy_requirement_table, Vacancy
-from sqlalchemy import or_
 import csv
-from constants import (DATE_TODAY, BASE_DIR, RESULS_DIR,
-                       MIN_BORDER_SALARY, MAX_BORDER_SALARY)
+
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
+from constants import (BASE_DIR, DATE_TODAY, MAX_BORDER_SALARY,
+                       MIN_BORDER_SALARY, RESULS_DIR)
+from db import Requirement, Vacancy, session, vacancy_requirement_table
 
 # Задаем имя файла CSV для сохранения требований
 report_file = BASE_DIR / RESULS_DIR / f'junior_reqirements_top_{DATE_TODAY}.csv'  # noqa

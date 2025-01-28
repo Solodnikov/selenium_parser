@@ -1,15 +1,11 @@
 from __future__ import annotations
+
 from typing import List, Optional
 
-from sqlalchemy import (create_engine, Column, Integer,
-                        String, Table,
-                        )
-from sqlalchemy.orm import declarative_base, Session
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
-
+from sqlalchemy import (Column, ForeignKey, Integer, String, Table,
+                        create_engine)
+from sqlalchemy.orm import (Mapped, Session, declarative_base, mapped_column,
+                            relationship)
 
 Base = declarative_base()
 
@@ -32,7 +28,7 @@ class Company(Base):
     name: Mapped[str | None] = mapped_column(String(50), default=None)
     rank: Mapped[int | None] = mapped_column(Integer, default=None)
     location: Mapped[str | None] = mapped_column(String(50), default=None)
-    vacancy: Mapped[Optional["Vacancy"]] = relationship(back_populates="company")
+    vacancy: Mapped[Optional["Vacancy"]] = relationship(back_populates="company") # noqa
 
 
 # class CompanyActivity(Base):
@@ -57,7 +53,7 @@ class Vacancy(Base):
     vac_url: Mapped[str] = mapped_column(String(200), default=None)
     vac_date_parse: Mapped[str] = mapped_column(String(200), default=None)
     company_id: Mapped[Optional[int]] = mapped_column(ForeignKey('company.id'))
-    company: Mapped[Optional["Company"]] = relationship(back_populates="vacancy")
+    company: Mapped[Optional["Company"]] = relationship(back_populates="vacancy") # noqa
 
     def __repr__(self) -> str:
         return f"{self.id}, {self.vac_name}, {self.vac_exp}"

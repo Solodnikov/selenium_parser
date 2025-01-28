@@ -1,13 +1,13 @@
-import time
-import re
 import datetime
+import re
+import time
+from typing import Dict, List, Set
 
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.remote.webelement import WebElement
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 from tqdm import tqdm
-from typing import List, Set, Dict
 
 from constants import INCORRECT_NAMES
 

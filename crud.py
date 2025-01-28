@@ -1,8 +1,9 @@
+import datetime
+
 from sqlalchemy.orm import Session
 
-from db import Vacancy, Requirement
-import datetime
 from constants import INCORRECT_REQUIREMENTS
+from db import Requirement, Vacancy
 
 
 def vacancy_exist(session: Session, vacancy_url: str) -> bool:

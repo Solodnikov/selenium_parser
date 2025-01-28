@@ -1,31 +1,19 @@
 import os
+import time
+
 from dotenv import load_dotenv
+from fake_useragent import UserAgent
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from fake_useragent import UserAgent
-from functions import (authorization_hh, # noqa
-                       from_main_to_my_resumes,
-                       from_my_resumes_to_recomended_vacations,
-                       get_pages_urls,
-                       get_vacancy_urls_on_page,
-                       get_vacancy_full_info,
-                       )
-from crud import (vacancy_exist,
-                  create_obj_in_db,
-                  vacancy_old,
-                  update_obj_in_db,
-                  del_old_vacancies
-                  )
-import time
-from db import session
 from tqdm import tqdm
-from constants import (LOGIN_URL,
-                       WEB_DRIVER_PATH,
-                       PARSE_PAUSE,
-                       MAX_PARSE)
-from selenium.webdriver.chrome.service import Service as ChromiumService
-from webdriver_manager.chrome import ChromeDriverManager
 
+from constants import LOGIN_URL, MAX_PARSE, PARSE_PAUSE, WEB_DRIVER_PATH
+from crud import (create_obj_in_db, del_old_vacancies, update_obj_in_db,
+                  vacancy_exist, vacancy_old)
+from db import session
+from functions import (authorization_hh, from_main_to_my_resumes,
+                       from_my_resumes_to_recomended_vacations, get_pages_urls,
+                       get_vacancy_full_info, get_vacancy_urls_on_page)
 
 load_dotenv()
 
@@ -53,12 +41,7 @@ service = Service(
 driver = webdriver.Chrome(service=service,
                           options=options)
 
-# driver = webdriver.Chrome(options=options,
-#                           service=ChromiumService(
-#                               ChromeDriverManager().install()
-#                           ))
 
-# start
 try:
     authorization_hh(driver, LOGIN_URL, email, password)
     from_main_to_my_resumes(driver)
