@@ -30,18 +30,13 @@ class Company(Base):
     location: Mapped[str | None] = mapped_column(String(50), default=None)
     vacancy: Mapped[Optional["Vacancy"]] = relationship(back_populates="company") # noqa
 
-
-# class CompanyActivity(Base):
-#     __tablename__ = 'company_activity'
-#     id: Mapped[int] = mapped_column(primary_key=True)
+    def __repr__(self) -> str:
+        return f"{self.id}, {self.name}"
 
 
 class Vacancy(Base):
     __tablename__ = 'vacancy'
     id: Mapped[int] = mapped_column(primary_key=True)
-    # requirement: Mapped[Optional["Requirement"]] = relationship(
-    #     secondary=vacancy_requirement_table,
-    #     back_populates="vacancy")
     requirements: Mapped[List["Requirement"]] = relationship(
         secondary=vacancy_requirement_table,
         back_populates="vacancies",
@@ -62,15 +57,11 @@ class Vacancy(Base):
 class Requirement(Base):
     __tablename__ = 'requirement'
     id: Mapped[int] = mapped_column(primary_key=True)
-    # vacancy: Mapped[List['Vacancy'] | None] = relationship(
-    #     secondary=vacancy_requirement_table,
-    #     back_populates="requirement")
     vacancies: Mapped[List["Vacancy"]] = relationship(
         secondary=vacancy_requirement_table,
         back_populates="requirements",
     )
     name: Mapped[str] = mapped_column(String(200), default=None)
-    # in_stock: Mapped[bool] = mapped_column(Boolean, default=False)
 
     def __repr__(self) -> str:
         return self.name

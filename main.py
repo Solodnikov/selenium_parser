@@ -32,7 +32,7 @@ options.add_argument('--disable-blink-features=AutomationControlled')
 # headless mode
 # options.add_argument('--headless')
 
-# подключение веб драйвера
+# enable webdriver
 service = Service(
     executable_path=WEB_DRIVER_PATH
 )
