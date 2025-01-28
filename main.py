@@ -1,31 +1,19 @@
 import os
+import time
+
 from dotenv import load_dotenv
+from fake_useragent import UserAgent
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from fake_useragent import UserAgent
-from functions import (authorization_hh, # noqa
-                       from_main_to_my_resumes,
-                       from_my_resumes_to_recomended_vacations,
-                       get_pages_urls,
-                       get_vacancy_urls_on_page,
-                       get_vacancy_full_info,
-                       )
-from crud import (vacancy_exist,
-                  create_obj_in_db,
-                  vacancy_old,
-                  update_obj_in_db,
-                  del_old_vacancies
-                  )
-import time
-from db import session
 from tqdm import tqdm
-from constants import (LOGIN_URL,
-                       WEB_DRIVER_PATH,
-                       PARSE_PAUSE,
-                       MAX_PARSE)
-from selenium.webdriver.chrome.service import Service as ChromiumService
-from webdriver_manager.chrome import ChromeDriverManager
 
+from constants import LOGIN_URL, MAX_PARSE, PARSE_PAUSE, WEB_DRIVER_PATH
+from crud import (create_obj_in_db, del_old_vacancies, update_obj_in_db,
+                  vacancy_exist, vacancy_old)
+from db import session, initialize_database
+from functions import (authorization_hh, from_main_to_my_resumes,
+                       from_my_resumes_to_recomended_vacations, get_pages_urls,
+                       get_vacancy_full_info, get_vacancy_urls_on_page)
 
 load_dotenv()
 
@@ -44,22 +32,18 @@ options.add_argument('--disable-blink-features=AutomationControlled')
 # headless mode
 # options.add_argument('--headless')
 
-# подключение веб драйвера
+# enable webdriver
 service = Service(
     executable_path=WEB_DRIVER_PATH
 )
 
 # brouser
-# driver = webdriver.Chrome(service=service,
-#                           options=options)
+driver = webdriver.Chrome(service=service,
+                          options=options)
 
-driver = webdriver.Chrome(options=options,
-                          service=ChromiumService(
-                              ChromeDriverManager().install()
-                          ))
 
-# start
 try:
+    initialize_database()
     authorization_hh(driver, LOGIN_URL, email, password)
     from_main_to_my_resumes(driver)
     from_my_resumes_to_recomended_vacations(driver)
@@ -96,6 +80,7 @@ try:
                         continue
             # если исчерпан счетчик, обновляем счетчик, выдерживаем паузу
             else:
+                print(f"It is time limit reached. Waiting {PARSE_PAUSE} seconds") # noqa
                 parse_counter = 0
                 time.sleep(PARSE_PAUSE)
 
@@ -108,6 +93,12 @@ except Exception as ex:
 finally:
     driver.close()
     driver.quit()
+
+# TODO добавить в базу данных название компании
+# TODO добавить в базу данных количество вакансий открытых в компании
+# TODO добавить данные об адресе места компании
+# TODO добавить возможность подбора наиболее подходящих вакансий
+# TODO добавить отдельно отмечать наиболее подходящие вакансии
 
 # TODO написать файл для логов
 # TODO 5) проработать старт для куки
