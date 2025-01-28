@@ -10,7 +10,7 @@ from tqdm import tqdm
 from constants import LOGIN_URL, MAX_PARSE, PARSE_PAUSE, WEB_DRIVER_PATH
 from crud import (create_obj_in_db, del_old_vacancies, update_obj_in_db,
                   vacancy_exist, vacancy_old)
-from db import session
+from db import session, initialize_database
 from functions import (authorization_hh, from_main_to_my_resumes,
                        from_my_resumes_to_recomended_vacations, get_pages_urls,
                        get_vacancy_full_info, get_vacancy_urls_on_page)
@@ -43,6 +43,7 @@ driver = webdriver.Chrome(service=service,
 
 
 try:
+    initialize_database()
     authorization_hh(driver, LOGIN_URL, email, password)
     from_main_to_my_resumes(driver)
     from_my_resumes_to_recomended_vacations(driver)

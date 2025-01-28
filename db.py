@@ -1,16 +1,17 @@
-from __future__ import annotations
-
+import os
 from typing import List, Optional
 
 from sqlalchemy import (Column, ForeignKey, Integer, String, Table,
                         create_engine)
 from sqlalchemy.orm import (Mapped, Session, declarative_base, mapped_column,
                             relationship)
+from constants import DB_FILE
+
 
 Base = declarative_base()
 
 
-engine = create_engine('sqlite:///sqlite.db', echo=True)
+engine = create_engine(f'sqlite:///{DB_FILE}', echo=True)
 session = Session(engine)
 
 
@@ -129,6 +130,17 @@ def update_obj_in_db(data: dict, session: Session):
                 existing_vacancy.requirement.append(requirement)
         # Сохраняем изменения в базе данных
         session.commit()
+
+
+def initialize_database():
+    # Проверяем, существует ли файл базы данных
+    if not os.path.exists(DB_FILE):
+        print("База данных отсутствует. Создаю новую...")
+        # Создаем все таблицы, описанные в Base
+        Base.metadata.create_all(engine)
+        print("База данных создана.")
+    else:
+        print("База данных уже существует.")
 
 
 if __name__ == '__main__':
