@@ -87,9 +87,9 @@ def from_my_resumes_to_recomended_vacations(
     """ Переход cо страницы резюме на список рекомендуемых вакансий. """
     print('Getting vacancies list...')
     xpath_list = [
+        "//a[@data-qa='resume-recommendations__button_respond']",
         "//a[@data-qa='resume-recommendations__button_updateResume']",
         "//a[@data-qa='resume-recommendations__button_editResume']",
-        "//a[@data-qa='resume-recommendations__button_respond']",
     ]
     for xpath in xpath_list:
         try:
